@@ -18,36 +18,47 @@
       --shadow-lg:0 4px 24px rgba(37,99,235,.12),0 1px 4px rgba(0,0,0,.06);
     }
     body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:0 1rem 5rem;background-image:radial-gradient(ellipse at 20% 0%,rgba(124,58,237,.06) 0%,transparent 50%),radial-gradient(ellipse at 80% 100%,rgba(37,99,235,.05) 0%,transparent 50%)}
-
     .wrap{width:100%;max-width:640px;padding-top:2.5rem}
-
     .brand{text-align:center;margin-bottom:2rem}
     .brand-logo{display:inline-flex;align-items:center;gap:.6rem;margin-bottom:.4rem}
     .brand-icon{width:40px;height:40px;background:var(--purple);border-radius:10px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(124,58,237,.3)}
     .brand-icon svg{width:22px;height:22px}
     .brand-name{font-size:1.5rem;font-weight:700;color:var(--text);letter-spacing:-.025em}
     .brand-tagline{font-size:.82rem;color:var(--muted);font-weight:500}
-
     .card{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:1.8rem 2rem;box-shadow:var(--shadow-lg);margin-bottom:1rem;position:relative;overflow:hidden}
     .card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--purple),var(--blue))}
-
-    /* Login */
     .login-label{font-size:.72rem;font-weight:600;color:var(--text);margin-bottom:.4rem;display:block}
-    .login-input{width:100%;padding:.72rem 1rem;border:1.5px solid var(--border);border-radius:9px;font-family:'JetBrains Mono',monospace;font-size:.88rem;color:var(--text);outline:none;transition:border-color .2s,box-shadow .2s;background:var(--white);letter-spacing:.05em}
+    .login-input{width:100%;padding:.72rem 1rem;border:1.5px solid var(--border);border-radius:9px;font-family:'Inter',sans-serif;font-size:.88rem;color:var(--text);outline:none;transition:border-color .2s,box-shadow .2s;background:var(--white)}
+    .login-input.mono{font-family:'JetBrains Mono',monospace;letter-spacing:.05em}
     .login-input:focus{border-color:var(--purple);box-shadow:0 0 0 3px rgba(124,58,237,.1)}
     .btn-login{width:100%;background:var(--purple);color:#fff;border:none;border-radius:9px;padding:.85rem;font-family:'Inter',sans-serif;font-size:.92rem;font-weight:600;cursor:pointer;margin-top:.8rem;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:.5rem}
     .btn-login:hover:not(:disabled){background:#6d28d9;transform:translateY(-1px);box-shadow:0 6px 20px rgba(124,58,237,.3)}
     .btn-login:disabled{background:#c4b5fd;cursor:not-allowed;transform:none}
-
-    /* Stats grid */
+    .btn-back{background:none;border:none;color:var(--muted);font-size:.8rem;cursor:pointer;font-family:'Inter',sans-serif;padding:.3rem 0;margin-bottom:1rem;display:flex;align-items:center;gap:.3rem}
+    .btn-back:hover{color:var(--purple)}
+    .otp-inputs{display:flex;gap:.5rem;justify-content:center;margin:1.2rem 0}
+    .otp-digit{width:48px;height:56px;border:2px solid var(--border);border-radius:10px;font-family:'JetBrains Mono',monospace;font-size:1.4rem;font-weight:700;text-align:center;color:var(--purple);outline:none;transition:border-color .2s,box-shadow .2s;background:var(--white)}
+    .otp-digit:focus{border-color:var(--purple);box-shadow:0 0 0 3px rgba(124,58,237,.12)}
     .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem;margin-bottom:1rem}
     @media(max-width:480px){.stats-grid{grid-template-columns:1fr 1fr}}
     .stat-card{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:.9rem 1rem;box-shadow:var(--shadow)}
     .stat-val{font-size:1.4rem;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--text);line-height:1}
     .stat-lbl{font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-top:.2rem;font-weight:500}
-    .sv-green{color:var(--success)} .sv-blue{color:var(--blue)} .sv-purple{color:var(--purple)} .sv-amber{color:var(--warn)}
-
-    /* Customer row */
+    .sv-green{color:var(--success)} .sv-blue{color:var(--blue)} .sv-purple{color:var(--purple)} .sv-amber{color:var(--warn)} .sv-teal{color:#0891b2}
+    /* Commission card */
+    .commission-card{background:linear-gradient(135deg,#7c3aed,#4f46e5);border-radius:12px;padding:1.2rem 1.4rem;color:#fff;margin-bottom:1rem;position:relative;overflow:hidden}
+    .commission-card::after{content:'';position:absolute;right:-20px;top:-20px;width:100px;height:100px;background:rgba(255,255,255,.07);border-radius:50%}
+    .comm-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem}
+    .comm-label{font-size:.7rem;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.08em;font-weight:600}
+    .comm-val{font-size:1.3rem;font-weight:800;font-family:'JetBrains Mono',monospace}
+    .comm-val.earned{color:#a7f3d0}
+    .comm-val.paid{color:#bfdbfe}
+    .comm-val.pending{color:#fde68a}
+    .comm-divider{height:1px;background:rgba(255,255,255,.15);margin:.7rem 0}
+    .payout-row{border:1px solid var(--border);border-radius:8px;padding:.7rem .9rem;margin-bottom:.5rem;display:flex;justify-content:space-between;align-items:center;background:var(--white)}
+    .payout-status-paid{font-size:.65rem;font-weight:700;padding:.2rem .55rem;border-radius:99px;background:var(--success-bg);border:1px solid var(--success-border);color:var(--success)}
+    .payout-status-pending{font-size:.65rem;font-weight:700;padding:.2rem .55rem;border-radius:99px;background:var(--warn-bg);border:1px solid var(--warn-border);color:var(--warn)}
+    /* Customer rows */
     .cust-row{border:1px solid var(--border);border-radius:10px;padding:.9rem 1.1rem;margin-bottom:.6rem;background:var(--white);transition:all .2s}
     .cust-row:hover{border-color:var(--blue-mid);box-shadow:var(--shadow)}
     .cust-row.expiring{border-color:var(--warn-border);background:var(--warn-bg)}
@@ -55,43 +66,36 @@
     .cr-top{display:flex;align-items:flex-start;justify-content:space-between;gap:.8rem;margin-bottom:.5rem;flex-wrap:wrap}
     .cr-name{font-size:.9rem;font-weight:700;color:var(--text)}
     .cr-pkg{font-size:.72rem;color:var(--muted)}
-
-    /* Status pills */
     .spill{display:inline-flex;align-items:center;gap:.3rem;padding:.2rem .65rem;border-radius:99px;font-size:.65rem;font-weight:600}
     .spill-active{background:var(--success-bg);border:1px solid var(--success-border);color:var(--success)}
     .spill-expiring{background:var(--warn-bg);border:1px solid var(--warn-border);color:var(--warn)}
     .spill-expired{background:var(--error-bg);border:1px solid var(--error-border);color:var(--error)}
     .spill-dot{width:5px;height:5px;border-radius:50%;background:currentColor;animation:pdot 1.8s ease-in-out infinite}
-
-    /* Progress mini */
     .mini-prog{height:4px;background:var(--border);border-radius:3px;overflow:hidden;margin:.5rem 0}
     .mini-prog-fill{height:100%;border-radius:3px;transition:width .4s}
-
-    /* Revenue bar chart */
     .rev-bars{display:flex;align-items:flex-end;gap:.4rem;height:90px;margin:.6rem 0}
     .rev-bar-col{display:flex;flex-direction:column;align-items:center;gap:.25rem;flex:1}
     .rev-bar-fill{width:100%;border-radius:3px 3px 0 0;min-height:4px;background:var(--purple);opacity:.8;transition:height .4s}
     .rev-bar-lbl{font-size:.58rem;color:var(--muted2)}
     .rev-bar-val{font-size:.6rem;color:var(--purple);font-family:'JetBrains Mono',monospace}
-
-    /* Tabs */
     .tabs{display:flex;gap:.3rem;margin-bottom:1.2rem;border-bottom:1px solid var(--border);padding-bottom:.3rem}
     .tab{padding:.35rem .8rem;border-radius:7px 7px 0 0;font-size:.78rem;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--muted);font-family:'Inter',sans-serif;transition:all .15s}
     .tab.active{background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple-border);border-bottom:none}
-
-    /* Screens */
     .screen{display:none}.screen.active{display:block}
     .spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none}
     .btn-login.loading .btn-text{display:none}.btn-login.loading .spinner{display:block}
     .err-msg{background:var(--error-bg);border:1px solid var(--error-border);border-radius:8px;padding:.65rem .9rem;font-size:.8rem;color:var(--error);font-weight:500;margin-top:.65rem;display:none}
     .err-msg.show{display:block}
-
+    .info-msg{background:var(--blue-light);border:1px solid var(--blue-mid);border-radius:8px;padding:.65rem .9rem;font-size:.8rem;color:var(--blue);font-weight:500;margin-top:.65rem}
     .section-title{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:.8rem}
     .empty{text-align:center;color:var(--muted);font-size:.82rem;padding:2rem 0}
     .footer{text-align:center;margin-top:1.5rem;font-size:.7rem;color:var(--muted2)}
     .footer a{color:var(--muted2);text-decoration:none}
     .footer a:hover{color:var(--blue)}
-
+    .step-dots{display:flex;justify-content:center;gap:.5rem;margin-bottom:1.4rem}
+    .step-dot{width:8px;height:8px;border-radius:50%;background:var(--border);transition:background .3s}
+    .step-dot.active{background:var(--purple)}
+    .step-dot.done{background:#a78bfa}
     @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
     @keyframes spin{to{transform:rotate(360deg)}}
     @keyframes pdot{0%,100%{opacity:1}50%{opacity:.35}}
@@ -104,7 +108,8 @@
     <div class="brand-logo">
       <div class="brand-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
         </svg>
       </div>
       <div class="brand-name">DTC</div>
@@ -112,32 +117,72 @@
     <div class="brand-tagline">Reseller Portal</div>
   </div>
 
-  <!-- ── SCREEN: Login ── -->
+  <!-- ── SCREEN: Step 1 — ID + Password ── -->
   <div class="screen active" id="screen-login">
+    <div class="step-dots">
+      <div class="step-dot active" id="dot-1"></div>
+      <div class="step-dot" id="dot-2"></div>
+      <div class="step-dot" id="dot-3"></div>
+    </div>
     <div class="card" style="animation:fadeUp .5s ease both .1s">
       <h2 style="font-size:1.1rem;font-weight:700;margin-bottom:.3rem;letter-spacing:-.02em">Reseller Sign In</h2>
-      <p style="font-size:.82rem;color:var(--muted);margin-bottom:1.4rem;line-height:1.65">Enter your Reseller ID to view your sales and commission dashboard.</p>
+      <p style="font-size:.82rem;color:var(--muted);margin-bottom:1.4rem;line-height:1.65">Enter your Reseller ID and password to continue.</p>
       <label class="login-label">Reseller ID</label>
-      <input class="login-input" type="text" id="reseller-id-input" placeholder="e.g. RSL-YOURNAME" autocomplete="off" spellcheck="false"/>
-      <div class="err-msg" id="login-err">Invalid Reseller ID. Please contact DTC to confirm your ID.</div>
-      <button class="btn-login" id="login-btn" onclick="resellerLogin()">
-        <span class="btn-text">View My Dashboard</span>
+      <input class="login-input mono" type="text" id="reseller-id-input" placeholder="e.g. rsl-yourname" autocomplete="off" spellcheck="false" style="margin-bottom:.75rem"/>
+      <label class="login-label">Password</label>
+      <input class="login-input" type="password" id="reseller-pw-input" placeholder="Your password" autocomplete="current-password"/>
+      <div class="err-msg" id="login-err"></div>
+      <button class="btn-login" id="login-btn" onclick="step1Submit()">
+        <span class="btn-text">Continue →</span>
         <div class="spinner"></div>
       </button>
     </div>
-    <p style="text-align:center;font-size:.75rem;color:var(--muted2);margin-top:.8rem">Not a reseller yet? <a href="https://wa.me/8619738122807" target="_blank" style="color:var(--purple);text-decoration:none;font-weight:500">Apply via WhatsApp →</a></p>
+    <p style="text-align:center;font-size:.75rem;color:var(--muted2);margin-top:.8rem">
+      Not a reseller yet? <a href="https://wa.me/8619738122807" target="_blank" style="color:var(--purple);text-decoration:none;font-weight:500">Apply via WhatsApp →</a>
+    </p>
+  </div>
+
+  <!-- ── SCREEN: Step 2 — OTP ── -->
+  <div class="screen" id="screen-otp">
+    <div class="step-dots">
+      <div class="step-dot done" id="dot-1b"></div>
+      <div class="step-dot active" id="dot-2b"></div>
+      <div class="step-dot" id="dot-3b"></div>
+    </div>
+    <div class="card" style="animation:fadeUp .5s ease both .1s">
+      <button class="btn-back" onclick="backToLogin()">← Back</button>
+      <h2 style="font-size:1.1rem;font-weight:700;margin-bottom:.3rem;letter-spacing:-.02em">Check your email</h2>
+      <p style="font-size:.82rem;color:var(--muted);margin-bottom:.6rem;line-height:1.65">
+        A 6-digit code was sent to <strong id="otp-masked-email">your email</strong>. Enter it below.
+      </p>
+      <div class="otp-inputs" id="otp-inputs">
+        <input class="otp-digit" type="text" inputmode="numeric" maxlength="1" id="otp0"/>
+        <input class="otp-digit" type="text" inputmode="numeric" maxlength="1" id="otp1"/>
+        <input class="otp-digit" type="text" inputmode="numeric" maxlength="1" id="otp2"/>
+        <input class="otp-digit" type="text" inputmode="numeric" maxlength="1" id="otp3"/>
+        <input class="otp-digit" type="text" inputmode="numeric" maxlength="1" id="otp4"/>
+        <input class="otp-digit" type="text" inputmode="numeric" maxlength="1" id="otp5"/>
+      </div>
+      <div class="err-msg" id="otp-err"></div>
+      <button class="btn-login" id="otp-btn" onclick="step2Submit()">
+        <span class="btn-text">Verify Code →</span>
+        <div class="spinner"></div>
+      </button>
+      <p style="text-align:center;font-size:.75rem;color:var(--muted2);margin-top:.9rem">
+        Didn't receive it? <button onclick="step1Submit(true)" style="background:none;border:none;color:var(--purple);font-size:.75rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif">Resend code</button>
+      </p>
+    </div>
   </div>
 
   <!-- ── SCREEN: Dashboard ── -->
   <div class="screen" id="screen-dash">
-
-    <!-- Header -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;flex-wrap:wrap;gap:.8rem">
       <div>
-        <h2 style="font-size:1.2rem;font-weight:700;color:var(--text);letter-spacing:-.02em" id="rs-name-heading">Reseller Dashboard</h2>
+        <h2 style="font-size:1.2rem;font-weight:700;color:var(--text);letter-spacing:-.02em" id="rs-name-heading">Dashboard</h2>
         <p style="font-size:.75rem;color:var(--muted);font-family:'JetBrains Mono',monospace" id="rs-id-heading"></p>
       </div>
       <button onclick="resellerLogout()" style="background:none;border:1px solid var(--border);border-radius:7px;padding:.3rem .75rem;font-size:.72rem;color:var(--muted);cursor:pointer;font-family:'Inter',sans-serif">✕ Sign Out</button>
+      <button onclick="downloadCSV()" style="background:var(--success-bg);border:1px solid var(--success-border);border-radius:7px;padding:.3rem .75rem;font-size:.72rem;color:var(--success);cursor:pointer;font-family:'Inter',sans-serif;font-weight:600">⬇ Export CSV</button>
     </div>
 
     <!-- Stats -->
@@ -150,52 +195,77 @@
       <div class="stat-card"><div class="stat-val" id="rs-month">$0</div><div class="stat-lbl">This Month</div></div>
     </div>
 
+    <!-- Commission Card -->
+    <div class="commission-card" id="rs-commission-card" style="display:none">
+      <div class="comm-row">
+        <div>
+          <div class="comm-label">Commission Rate</div>
+          <div class="comm-val" id="rs-comm-rate" style="font-size:1rem;color:#e9d5ff">0%</div>
+        </div>
+        <div style="text-align:right">
+          <div class="comm-label">Total Earned</div>
+          <div class="comm-val earned" id="rs-comm-earned">$0</div>
+        </div>
+      </div>
+      <div class="comm-divider"></div>
+      <div class="comm-row" style="margin-bottom:0">
+        <div>
+          <div class="comm-label">Paid Out</div>
+          <div class="comm-val paid" id="rs-comm-paid">$0</div>
+        </div>
+        <div style="text-align:right">
+          <div class="comm-label">Pending Payout</div>
+          <div class="comm-val pending" id="rs-comm-pending">$0</div>
+        </div>
+      </div>
+    </div>
+
     <!-- Monthly Chart -->
     <div class="card" style="animation:fadeUp .5s ease both .05s">
       <div class="section-title">Monthly Revenue</div>
       <div class="rev-bars" id="rs-chart"></div>
     </div>
 
-    <!-- Tabs: My Customers / Top Products -->
+    <!-- Tabs -->
     <div class="tabs">
       <button class="tab active" id="tab-customers" onclick="switchTab('customers')">My Customers</button>
       <button class="tab" id="tab-products" onclick="switchTab('products')">By Product</button>
       <button class="tab" id="tab-recent" onclick="switchTab('recent')">Recent Sales</button>
+      <button class="tab" id="tab-payouts" onclick="switchTab('payouts')">Payouts</button>
     </div>
 
-    <!-- Customers tab -->
     <div id="tab-content-customers">
       <div class="card" style="padding:1rem 1.2rem">
         <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.8rem;flex-wrap:wrap">
-          <button class="tab" id="cf-all" onclick="setCustFilter('all',this)" style="font-size:.7rem;padding:.25rem .65rem">All</button>
-          <button class="tab" id="cf-active" onclick="setCustFilter('active',this)" style="font-size:.7rem;padding:.25rem .65rem">Active</button>
-          <button class="tab" id="cf-expiring" onclick="setCustFilter('expiring',this)" style="font-size:.7rem;padding:.25rem .65rem">Expiring</button>
-          <button class="tab" id="cf-expired" onclick="setCustFilter('expired',this)" style="font-size:.7rem;padding:.25rem .65rem">Expired</button>
+          <button class="tab active" id="cf-all"      onclick="setCustFilter('all',this)"      style="font-size:.7rem;padding:.25rem .65rem">All</button>
+          <button class="tab"        id="cf-active"   onclick="setCustFilter('active',this)"   style="font-size:.7rem;padding:.25rem .65rem">Active</button>
+          <button class="tab"        id="cf-expiring" onclick="setCustFilter('expiring',this)" style="font-size:.7rem;padding:.25rem .65rem">Expiring</button>
+          <button class="tab"        id="cf-expired"  onclick="setCustFilter('expired',this)"  style="font-size:.7rem;padding:.25rem .65rem">Expired</button>
         </div>
         <div id="rs-customers"></div>
       </div>
     </div>
 
-    <!-- Products tab -->
     <div id="tab-content-products" style="display:none">
-      <div class="card" style="padding:1rem 1.2rem">
-        <div id="rs-products"></div>
-      </div>
+      <div class="card" style="padding:1rem 1.2rem"><div id="rs-products"></div></div>
     </div>
 
-    <!-- Recent sales tab -->
     <div id="tab-content-recent" style="display:none">
+      <div class="card" style="padding:1rem 1.2rem"><div id="rs-recent"></div></div>
+    </div>
+
+    <div id="tab-content-payouts" style="display:none">
       <div class="card" style="padding:1rem 1.2rem">
-        <div id="rs-recent"></div>
+        <div class="section-title">Payout History</div>
+        <div id="rs-payouts"></div>
       </div>
     </div>
 
-    <!-- Support -->
     <div class="card" style="border-color:var(--purple-border);animation:fadeUp .5s ease both .2s">
       <p style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--purple);margin-bottom:.7rem">DTC Reseller Support</p>
-      <p style="font-size:.8rem;color:var(--muted);line-height:1.65;margin-bottom:.9rem">Need help with a customer, pricing, or your reseller account? Reach us directly.</p>
+      <p style="font-size:.8rem;color:var(--muted);line-height:1.65;margin-bottom:.9rem">Need help with a customer, pricing, or your account?</p>
       <div style="display:flex;gap:.6rem;flex-wrap:wrap">
-        <a href="https://wa.me/8619738122807" target="_blank" style="display:inline-flex;align-items:center;gap:.4rem;background:#25d366;color:#fff;border:none;border-radius:8px;padding:.5rem 1rem;font-size:.78rem;font-weight:600;text-decoration:none;transition:all .2s">
+        <a href="https://wa.me/8619738122807" target="_blank" style="display:inline-flex;align-items:center;gap:.4rem;background:#25d366;color:#fff;border:none;border-radius:8px;padding:.5rem 1rem;font-size:.78rem;font-weight:600;text-decoration:none">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
           WhatsApp
         </a>
@@ -205,137 +275,244 @@
         </a>
       </div>
     </div>
-
   </div><!-- /screen-dash -->
 </div>
 
 <div class="footer"><a href="/">← Back to DTC</a> &nbsp;·&nbsp; <a href="/customer">Customer Portal</a></div>
 
 <script>
-  let _data = null;
-  let _custFilter = 'all';
+  let _data        = null;
+  let _rid         = null;
+  let _custFilter  = 'all';
 
-  const show = id => { document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); };
-  const fmtDate = iso => iso ? new Date(iso).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) : '—';
-  const daysUntil = iso => Math.ceil((new Date(iso)-new Date())/86400000);
-  const _sym = d => (d && d.currencySymbol) || '$';
-
-  const resellerLogin = async () => {
-    const rid = document.getElementById('reseller-id-input').value.trim();
-    if (!rid) return;
-    const btn = document.getElementById('login-btn');
-    const err = document.getElementById('login-err');
-    err.classList.remove('show');
-    btn.classList.add('loading'); btn.disabled = true;
-    try {
-      const r = await fetch('/api/reseller-dashboard', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ resellerId: rid }) });
-      const d = await r.json();
-      if (!d || !d.found) { err.textContent = d.error || 'Invalid Reseller ID.'; err.classList.add('show'); }
-      else { _data = d; renderDash(d); show('screen-dash'); }
-    } catch { err.textContent = 'Cannot reach the server.'; err.classList.add('show'); }
-    btn.classList.remove('loading'); btn.disabled = false;
+  // ── Helpers ─────────────────────────────────────────────────────────────
+  const show     = id => { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); };
+  const fmtDate  = iso => iso ? new Date(iso).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' }) : '—';
+  const daysUntil = iso => Math.ceil((new Date(iso) - new Date()) / 86400000);
+  const _sym     = d => (d && d.currencySymbol) || '$';
+  const _set     = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  const _esc     = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const _setLoading = (btnId, on) => {
+    const btn = document.getElementById(btnId);
+    btn.disabled = on;
+    btn.classList.toggle('loading', on);
   };
-  document.getElementById('reseller-id-input').addEventListener('keydown', e => { if (e.key==='Enter') resellerLogin(); });
+  const _showErr = (id, msg) => { const el = document.getElementById(id); el.textContent = msg; el.classList.add('show'); };
+  const _clearErr = id => document.getElementById(id).classList.remove('show');
 
-  const resellerLogout = () => { _data = null; _custFilter = 'all'; document.getElementById('reseller-id-input').value=''; show('screen-login'); };
+  // ── OTP input wiring ─────────────────────────────────────────────────────
+  document.querySelectorAll('.otp-digit').forEach((inp, i) => {
+    inp.addEventListener('input', e => {
+      const v = e.target.value.replace(/\D/g, '');
+      e.target.value = v.slice(-1);
+      if (v && i < 5) document.getElementById('otp' + (i + 1)).focus();
+      if (getOtpValue().length === 6) step2Submit();
+    });
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Backspace' && !e.target.value && i > 0) document.getElementById('otp' + (i - 1)).focus();
+    });
+    inp.addEventListener('paste', e => {
+      const pasted = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
+      if (pasted.length === 6) {
+        pasted.split('').forEach((ch, j) => { const el = document.getElementById('otp' + j); if (el) el.value = ch; });
+        e.preventDefault();
+        step2Submit();
+      }
+    });
+  });
 
+  document.getElementById('reseller-id-input').addEventListener('keydown', e => { if (e.key === 'Enter') step1Submit(); });
+  document.getElementById('reseller-pw-input').addEventListener('keydown', e => { if (e.key === 'Enter') step1Submit(); });
+
+  const getOtpValue = () => [0,1,2,3,4,5].map(i => document.getElementById('otp'+i).value).join('');
+
+  // ── Step 1: ID + Password ────────────────────────────────────────────────
+  const step1Submit = async (resend = false) => {
+    const rid = document.getElementById('reseller-id-input').value.trim();
+    const pw  = document.getElementById('reseller-pw-input').value;
+    if (!rid || !pw) return;
+
+    _clearErr('login-err');
+    _setLoading('login-btn', true);
+
+    try {
+      const r = await fetch('/api/reseller-otp', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resellerId: rid, password: pw }),
+      });
+      const d = await r.json();
+      if (!d.ok) {
+        _showErr('login-err', d.error || 'Login failed.');
+      } else {
+        _rid = rid;
+        document.getElementById('otp-masked-email').textContent = d.maskedEmail || 'your email';
+        [0,1,2,3,4,5].forEach(i => { document.getElementById('otp'+i).value = ''; });
+        _clearErr('otp-err');
+        show('screen-otp');
+        setTimeout(() => document.getElementById('otp0').focus(), 100);
+        if (resend) {
+          const info = document.createElement('div');
+          info.className = 'info-msg';
+          info.textContent = 'A new code has been sent.';
+          info.style.marginTop = '.6rem';
+          const card = document.querySelector('#screen-otp .card');
+          const existing = card.querySelector('.info-msg');
+          if (existing) existing.remove();
+          card.appendChild(info);
+          setTimeout(() => info.remove(), 4000);
+        }
+      }
+    } catch {
+      _showErr('login-err', 'Cannot reach the server.');
+    }
+    _setLoading('login-btn', false);
+  };
+
+  // ── Step 2: OTP verify ───────────────────────────────────────────────────
+  const step2Submit = async () => {
+    const code = getOtpValue();
+    if (code.length !== 6) return;
+    _clearErr('otp-err');
+    _setLoading('otp-btn', true);
+
+    try {
+      const r = await fetch('/api/reseller-verify-otp', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resellerId: _rid, code }),
+      });
+      const d = await r.json();
+      if (!d.ok) {
+        _showErr('otp-err', d.error || 'Incorrect code.');
+      } else {
+        _data = d;
+        // Create a short-lived download session so the reseller can download CSV
+        const sessionToken = Math.random().toString(36).slice(2);
+        localStorage.setItem('rs_session_token', sessionToken);
+        await fetch('/api/reseller-session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ resellerId: _rid, sessionToken }) });
+        renderDash(d);
+        show('screen-dash');
+      }
+    } catch {
+      _showErr('otp-err', 'Cannot reach the server.');
+    }
+    _setLoading('otp-btn', false);
+  };
+
+  const backToLogin  = () => { show('screen-login'); };
+  const downloadCSV = () => {
+    const sessionToken = localStorage.getItem('rs_session_token');
+    if (!_rid || !sessionToken) { alert('Please log in again to download.'); return; }
+    window.location.href = '/api/reseller-export?resellerId=' + encodeURIComponent(_rid) + '&sessionToken=' + encodeURIComponent(sessionToken);
+  };
+
+  const resellerLogout = () => {
+    _data = null; _rid = null; _custFilter = 'all';
+    localStorage.removeItem('rs_session_token');
+    document.getElementById('reseller-id-input').value = '';
+    document.getElementById('reseller-pw-input').value = '';
+    show('screen-login');
+  };
+
+  // ── Dashboard render ─────────────────────────────────────────────────────
   const renderDash = (d) => {
-    const sym = _sym(d);
-    const sales = d.sales || [];
-    const activeSales = sales.filter(s => s.approved);
-    const now = new Date();
+    const sym    = _sym(d);
+    const sales  = d.sales || [];
+    const active = sales.filter(s => s.approved !== false);
+    const now    = new Date();
 
-    // Heading
-    document.getElementById('rs-name-heading').textContent = d.resellerName || 'My Dashboard';
-    document.getElementById('rs-id-heading').textContent = 'ID: ' + (d.resellerId || '');
+    _set('rs-name-heading', d.resellerName || 'My Dashboard');
+    _set('rs-id-heading', 'ID: ' + (d.resellerId || ''));
 
-    // Stats
-    const total = activeSales.reduce((s,x)=>s+(x.price||0),0);
-    const activeCount = activeSales.filter(s => { if (!s.subscriptionExpiresAt) return true; return daysUntil(s.subscriptionExpiresAt)>0; }).length;
-    const expiringCount = activeSales.filter(s => { if (!s.subscriptionExpiresAt) return false; const d=daysUntil(s.subscriptionExpiresAt); return d>0&&d<=30; }).length;
-    const thisMonth = activeSales.filter(s => { const dd=new Date(s.approvedAt); return dd.getMonth()===now.getMonth()&&dd.getFullYear()===now.getFullYear(); }).reduce((s,x)=>s+(x.price||0),0);
-    const avg = activeSales.length ? total/activeSales.length : 0;
+    const total       = active.reduce((s, x) => s + (x.price || 0), 0);
+    const activeCount = active.filter(s => { if (!s.subscriptionExpiresAt) return true; return daysUntil(s.subscriptionExpiresAt) > 0; }).length;
+    const expiringCount = active.filter(s => { if (!s.subscriptionExpiresAt) return false; const dv = daysUntil(s.subscriptionExpiresAt); return dv > 0 && dv <= 30; }).length;
+    const thisMonth   = active.filter(s => { if (!s.approvedAt) return false; const dd = new Date(s.approvedAt); return dd.getMonth() === now.getMonth() && dd.getFullYear() === now.getFullYear(); }).reduce((s, x) => s + (x.price || 0), 0);
+    const avg         = active.length ? total / active.length : 0;
 
-    _set('rs-rev',      sym+total.toFixed(2));
+    _set('rs-rev',      sym + total.toFixed(2));
     _set('rs-count',    sales.length);
     _set('rs-active',   activeCount);
     _set('rs-expiring', expiringCount);
-    _set('rs-avg',      sym+avg.toFixed(2));
-    _set('rs-month',    sym+thisMonth.toFixed(2));
+    _set('rs-avg',      sym + avg.toFixed(2));
+    _set('rs-month',    sym + thisMonth.toFixed(2));
 
-    // Chart
-    _renderChart(activeSales, sym);
+    // Commission card
+    if (d.commissionRate > 0 || d.totalCommission > 0) {
+      document.getElementById('rs-commission-card').style.display = '';
+      _set('rs-comm-rate',    (d.commissionRate || 0) + '%');
+      _set('rs-comm-earned',  sym + (d.totalCommission || 0).toFixed(2));
+      _set('rs-comm-paid',    sym + (d.paidOut || 0).toFixed(2));
+      _set('rs-comm-pending', sym + (d.pendingPayout || 0).toFixed(2));
+    }
 
-    // Customers
+    _renderChart(active, sym);
     renderCustomers();
-    renderProducts(activeSales, sym);
-    renderRecent(activeSales, sym);
+    renderProducts(active, sym);
+    renderRecent(active, sym);
+    renderPayouts(d.payouts || [], sym);
   };
 
   const _renderChart = (sales, sym) => {
     const months = [];
     const now = new Date();
-    for (let i=5;i>=0;i--) {
-      const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
-      months.push({ label: d.toLocaleDateString('en-GB',{month:'short'}), month: d.getMonth(), year: d.getFullYear(), total: 0 });
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      months.push({ label: d.toLocaleDateString('en-GB', { month:'short' }), month: d.getMonth(), year: d.getFullYear(), total: 0 });
     }
     sales.forEach(s => {
       if (!s.approvedAt) return;
       const d = new Date(s.approvedAt);
-      const m = months.find(x=>x.month===d.getMonth()&&x.year===d.getFullYear());
-      if (m) m.total += (s.price||0);
+      const m = months.find(x => x.month === d.getMonth() && x.year === d.getFullYear());
+      if (m) m.total += (s.price || 0);
     });
-    const max = Math.max(...months.map(m=>m.total), 1);
+    const max = Math.max(...months.map(m => m.total), 1);
     document.getElementById('rs-chart').innerHTML = months.map(m => {
-      const h = Math.max(4, Math.round(m.total/max*74));
-      return `<div class="rev-bar-col">
-        <div class="rev-bar-val">${m.total>0?sym+m.total.toFixed(0):''}</div>
-        <div class="rev-bar-fill" style="height:${h}px;opacity:${m.total>0?1:.3}"></div>
-        <div class="rev-bar-lbl">${m.label}</div>
-      </div>`;
+      const h = Math.max(4, Math.round(m.total / max * 74));
+      return '<div class="rev-bar-col">'
+        + '<div class="rev-bar-val">' + (m.total > 0 ? sym + m.total.toFixed(0) : '') + '</div>'
+        + '<div class="rev-bar-fill" style="height:' + h + 'px;opacity:' + (m.total > 0 ? 1 : .3) + '"></div>'
+        + '<div class="rev-bar-lbl">' + m.label + '</div>'
+        + '</div>';
     }).join('');
   };
 
   const renderCustomers = () => {
     if (!_data) return;
-    const sym = _sym(_data);
-    const sales = (_data.sales||[]).filter(s=>s.approved);
-    const wrap = document.getElementById('rs-customers');
+    const sym    = _sym(_data);
+    const sales  = _data.sales || [];
+    const wrap   = document.getElementById('rs-customers');
     const filtered = sales.filter(s => {
-      if (_custFilter==='all') return true;
-      if (!s.subscriptionExpiresAt) return _custFilter==='active';
+      if (_custFilter === 'all') return true;
+      if (!s.subscriptionExpiresAt) return _custFilter === 'active';
       const d = daysUntil(s.subscriptionExpiresAt);
-      if (_custFilter==='active')   return d>30;
-      if (_custFilter==='expiring') return d>0&&d<=30;
-      if (_custFilter==='expired')  return d<=0;
+      if (_custFilter === 'active')   return d > 30;
+      if (_custFilter === 'expiring') return d > 0 && d <= 30;
+      if (_custFilter === 'expired')  return d <= 0;
       return true;
-    }).sort((a,b)=>new Date(b.approvedAt||0)-new Date(a.approvedAt||0));
+    }).sort((a, b) => new Date(b.approvedAt || 0) - new Date(a.approvedAt || 0));
 
-    if (!filtered.length) { wrap.innerHTML='<div class="empty">No customers match this filter.</div>'; return; }
+    if (!filtered.length) { wrap.innerHTML = '<div class="empty">No customers match this filter.</div>'; return; }
 
     wrap.innerHTML = filtered.map(s => {
-      const days = s.subscriptionExpiresAt ? daysUntil(s.subscriptionExpiresAt) : null;
-      const st = days===null?'active':days<=0?'expired':days<=30?'expiring':'active';
-      const pillCls = st==='active'?'spill-active':st==='expiring'?'spill-expiring':'spill-expired';
-      const pillTxt = st==='active'?(days?`${days}d left`:'Active'):st==='expiring'?`${days}d left`:'Expired';
-      const total = s.subscriptionDays||30;
-      const elapsed = days===null?50:Math.max(0,total-(days||0));
-      const pct = Math.min(100,(elapsed/total)*100);
-      const barColor = st==='expired'?'var(--error)':st==='expiring'?'var(--warn)':'var(--success)';
-      return `<div class="cust-row ${st==='expiring'?'expiring':st==='expired'?'expired':''}">
-        <div class="cr-top">
-          <div>
-            <div class="cr-name">${_esc(s.customerName)}</div>
-            <div class="cr-pkg" style="margin-top:.15rem">${_esc(s.packageType)} &nbsp;·&nbsp; <span style="font-family:'JetBrains Mono',monospace;font-size:.68rem">${_esc(s.email||'')}</span></div>
-          </div>
-          <span class="spill ${pillCls}"><span class="spill-dot"></span>${pillTxt}</span>
-        </div>
-        <div class="mini-prog"><div class="mini-prog-fill" style="width:${pct.toFixed(1)}%;background:${barColor}"></div></div>
-        <div style="display:flex;justify-content:space-between;font-size:.67rem;color:var(--muted)">
-          <span>Activated ${fmtDate(s.approvedAt)}</span>
-          <span style="font-family:'JetBrains Mono',monospace;color:var(--success);font-weight:600">${sym}${(s.price||0).toFixed(2)}</span>
-        </div>
-      </div>`;
+      const days   = s.subscriptionExpiresAt ? daysUntil(s.subscriptionExpiresAt) : null;
+      const st     = days === null ? 'active' : days <= 0 ? 'expired' : days <= 30 ? 'expiring' : 'active';
+      const pillCls = st === 'active' ? 'spill-active' : st === 'expiring' ? 'spill-expiring' : 'spill-expired';
+      const pillTxt = st === 'active' ? (days ? days + 'd left' : 'Active') : st === 'expiring' ? days + 'd left' : 'Expired';
+      const total  = s.subscriptionDays || 30;
+      const elapsed = days === null ? 50 : Math.max(0, total - (days || 0));
+      const pct    = Math.min(100, (elapsed / total) * 100);
+      const barColor = st === 'expired' ? 'var(--error)' : st === 'expiring' ? 'var(--warn)' : 'var(--success)';
+      return '<div class="cust-row ' + (st === 'expiring' ? 'expiring' : st === 'expired' ? 'expired' : '') + '">'
+        + '<div class="cr-top">'
+        + '<div><div class="cr-name">' + _esc(s.customerName) + '</div>'
+        + '<div class="cr-pkg" style="margin-top:.15rem">' + _esc(s.packageType) + ' &nbsp;·&nbsp; <span style="font-family:\'JetBrains Mono\',monospace;font-size:.68rem">' + _esc(s.email || '') + '</span></div></div>'
+        + '<span class="spill ' + pillCls + '"><span class="spill-dot"></span>' + pillTxt + '</span>'
+        + '</div>'
+        + '<div class="mini-prog"><div class="mini-prog-fill" style="width:' + pct.toFixed(1) + '%;background:' + barColor + '"></div></div>'
+        + '<div style="display:flex;justify-content:space-between;font-size:.67rem;color:var(--muted)">'
+        + '<span>Activated ' + fmtDate(s.approvedAt) + '</span>'
+        + '<span style="font-family:\'JetBrains Mono\',monospace;color:var(--success);font-weight:600">' + sym + (s.price || 0).toFixed(2) + '</span>'
+        + '</div></div>';
     }).join('');
   };
 
@@ -343,52 +520,66 @@
     const byProd = {};
     sales.forEach(s => {
       const k = s.productName || s.product || 'Unknown';
-      if (!byProd[k]) byProd[k]={total:0,count:0};
-      byProd[k].total+=(s.price||0); byProd[k].count++;
+      if (!byProd[k]) byProd[k] = { total: 0, count: 0 };
+      byProd[k].total += (s.price || 0); byProd[k].count++;
     });
-    const sorted = Object.entries(byProd).sort((a,b)=>b[1].total-a[1].total);
-    const max = Math.max(...sorted.map(([,v])=>v.total),1);
-    document.getElementById('rs-products').innerHTML = sorted.length ? sorted.map(([name,v])=>{
-      const pct=(v.total/max*100).toFixed(1);
-      return `<div style="margin-bottom:.9rem">
-        <div style="display:flex;justify-content:space-between;font-size:.8rem;font-weight:600;color:var(--text);margin-bottom:.3rem"><span>${_esc(name)}</span><span style="color:var(--success);font-family:'JetBrains Mono',monospace">${sym}${v.total.toFixed(2)}</span></div>
-        <div style="height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:.25rem"><div style="height:100%;width:${pct}%;background:var(--purple);border-radius:3px"></div></div>
-        <div style="font-size:.67rem;color:var(--muted)">${v.count} sale${v.count!==1?'s':''}</div>
-      </div>`;
+    const sorted = Object.entries(byProd).sort((a, b) => b[1].total - a[1].total);
+    const max = Math.max(...sorted.map(([, v]) => v.total), 1);
+    document.getElementById('rs-products').innerHTML = sorted.length ? sorted.map(([name, v]) => {
+      const pct = (v.total / max * 100).toFixed(1);
+      return '<div style="margin-bottom:.9rem">'
+        + '<div style="display:flex;justify-content:space-between;font-size:.8rem;font-weight:600;color:var(--text);margin-bottom:.3rem"><span>' + _esc(name) + '</span><span style="color:var(--success);font-family:\'JetBrains Mono\',monospace">' + sym + v.total.toFixed(2) + '</span></div>'
+        + '<div style="height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:.25rem"><div style="height:100%;width:' + pct + '%;background:var(--purple);border-radius:3px"></div></div>'
+        + '<div style="font-size:.67rem;color:var(--muted)">' + v.count + ' sale' + (v.count !== 1 ? 's' : '') + '</div></div>';
     }).join('') : '<div class="empty">No product data yet.</div>';
   };
 
   const renderRecent = (sales, sym) => {
-    const sorted = [...sales].sort((a,b)=>new Date(b.approvedAt||0)-new Date(a.approvedAt||0)).slice(0,15);
-    document.getElementById('rs-recent').innerHTML = sorted.length ? `
-      <div style="display:grid;grid-template-columns:1fr 1fr 80px 70px;gap:.4rem;font-size:.6rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.07em;padding:.3rem .25rem;border-bottom:1px solid var(--border);margin-bottom:.3rem">
-        <span>Customer</span><span>Package</span><span>Date</span><span style="text-align:right">Price</span>
-      </div>` +
-      sorted.map(s=>`<div style="display:grid;grid-template-columns:1fr 1fr 80px 70px;gap:.4rem;font-size:.75rem;padding:.32rem .25rem;border-bottom:1px solid #f1f5f9;align-items:center">
-        <span style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_esc(s.customerName)}</span>
-        <span style="color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_esc(s.packageType)}</span>
-        <span style="color:var(--muted2);font-size:.68rem">${fmtDate(s.approvedAt)}</span>
-        <span style="text-align:right;font-weight:700;color:var(--success);font-family:'JetBrains Mono',monospace">${sym}${(s.price||0).toFixed(2)}</span>
-      </div>`).join('')
-    : '<div class="empty">No sales yet.</div>';
+    const sorted = [...sales].sort((a, b) => new Date(b.approvedAt || 0) - new Date(a.approvedAt || 0)).slice(0, 15);
+    document.getElementById('rs-recent').innerHTML = sorted.length
+      ? '<div style="display:grid;grid-template-columns:1fr 1fr 80px 70px;gap:.4rem;font-size:.6rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.07em;padding:.3rem .25rem;border-bottom:1px solid var(--border);margin-bottom:.3rem"><span>Customer</span><span>Package</span><span>Date</span><span style="text-align:right">Price</span></div>'
+        + sorted.map(s => '<div style="display:grid;grid-template-columns:1fr 1fr 80px 70px;gap:.4rem;font-size:.75rem;padding:.32rem .25rem;border-bottom:1px solid #f1f5f9;align-items:center">'
+          + '<span style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + _esc(s.customerName) + '</span>'
+          + '<span style="color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + _esc(s.packageType) + '</span>'
+          + '<span style="color:var(--muted2);font-size:.68rem">' + fmtDate(s.approvedAt) + '</span>'
+          + '<span style="text-align:right;font-weight:700;color:var(--success);font-family:\'JetBrains Mono\',monospace">' + sym + (s.price || 0).toFixed(2) + '</span>'
+          + '</div>').join('')
+      : '<div class="empty">No sales yet.</div>';
+  };
+
+  const renderPayouts = (payouts, sym) => {
+    const wrap = document.getElementById('rs-payouts');
+    if (!payouts.length) { wrap.innerHTML = '<div class="empty">No payout records yet.</div>'; return; }
+    const sorted = [...payouts].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    wrap.innerHTML = sorted.map(p => {
+      const isPaid = p.status === 'paid';
+      return '<div class="payout-row">'
+        + '<div>'
+        + '<div style="font-size:.82rem;font-weight:700;color:var(--text)">' + sym + parseFloat(p.amount).toFixed(2) + (p.currency && p.currency !== 'USD' ? ' ' + p.currency : '') + '</div>'
+        + '<div style="font-size:.68rem;color:var(--muted);margin-top:.15rem">'
+        + (p.period ? p.period + ' · ' : '')
+        + fmtDate(isPaid ? p.paidAt : p.createdAt)
+        + (p.note ? ' · ' + _esc(p.note) : '')
+        + '</div>'
+        + '</div>'
+        + '<span class="' + (isPaid ? 'payout-status-paid' : 'payout-status-pending') + '">' + (isPaid ? '✓ Paid' : '⏳ Pending') + '</span>'
+        + '</div>';
+    }).join('');
   };
 
   const switchTab = (tab) => {
-    ['customers','products','recent'].forEach(t => {
-      document.getElementById('tab-'+t).classList.toggle('active',t===tab);
-      document.getElementById('tab-content-'+t).style.display = t===tab?'':'none';
+    ['customers', 'products', 'recent', 'payouts'].forEach(t => {
+      document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+      document.getElementById('tab-content-' + t).style.display = t === tab ? '' : 'none';
     });
   };
 
   const setCustFilter = (f, btn) => {
     _custFilter = f;
-    document.querySelectorAll('#tab-content-customers .tab').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('#tab-content-customers .tab').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     renderCustomers();
   };
-
-  const _set = (id,val) => { const el=document.getElementById(id); if(el) el.textContent=val; };
-  const _esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 </script>
 </body>
 </html>

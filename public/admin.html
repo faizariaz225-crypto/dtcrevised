@@ -619,6 +619,9 @@
         <button class="btn btn-primary" onclick="Resellers.openModal()">＋ Add Reseller</button>
       </div>
 
+      <!-- Expiry notification action -->
+      <div id="reseller-expiry-btn-wrap" style="margin-bottom:.9rem"></div>
+
       <!-- Summary stats -->
       <div class="stats" style="grid-template-columns:repeat(5,1fr);margin-bottom:1.4rem">
         <div class="stat"><div class="stat-val sv-ind"   id="reseller-total">—</div><div class="stat-lbl">Reseller Revenue</div></div>
@@ -633,6 +636,7 @@
         <button class="fb active" id="rtab-registry" onclick="Resellers.setTab('registry',this)">Registry</button>
         <button class="fb" id="rtab-performance" onclick="Resellers.setTab('performance',this)">Performance</button>
         <a href="/reseller" target="_blank" class="btn btn-outline btn-sm" style="margin-left:auto">🔗 Reseller Portal</a>
+        <button onclick="Resellers.exportCSV()" class="btn btn-outline btn-sm" style="color:var(--success);border-color:var(--success-border)">⬇ Export CSV</button>
       </div>
 
       <!-- Registry tab -->
@@ -1685,4 +1689,13 @@
     const importModal = document.getElementById('import-customer-modal');
     if (importModal) importModal.addEventListener('click', e => { if (e.target === importModal) ImportCustomer.close(); });
   });
+</script>
+<script src="/js/bulk-actions.js"></script>
+<script>
+  // Init bulk actions after page load
+  document.addEventListener('DOMContentLoaded', () => {
+    if (typeof BulkActions !== 'undefined') BulkActions.init();
+  });
+  // Also init after auth since DOMContentLoaded may have already fired
+  const _origShellInit = typeof Shell !== 'undefined' ? Shell.init : null;
 </script>
