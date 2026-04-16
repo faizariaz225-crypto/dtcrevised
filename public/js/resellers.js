@@ -1,7 +1,8 @@
 /* ─── DTC Admin — Resellers Module (Registry + Performance) ─────────────── */
 'use strict';
 
-const Resellers = (() => {
+// eslint-disable-next-line no-var
+var Resellers = (() => {
 
   let _registryData = [];
   let _currentTab   = 'registry';
@@ -49,6 +50,15 @@ const Resellers = (() => {
     _set('reseller-sale-count', resSales.length + ' sales');
     _set('reseller-count',      _registryData.filter(r => !r._tokenOnly).length + ' registered');
     _set('reseller-pct',        total > 0 ? (resRev / total * 100).toFixed(0) + '% of revenue' : '0%');
+
+    // Inject expiry notification button once
+    const wrap = document.getElementById('reseller-expiry-btn-wrap');
+    if (wrap && !wrap.dataset.injected) {
+      wrap.dataset.injected = '1';
+      wrap.innerHTML = '<button onclick="Resellers.sendExpiryNotifications()" '
+        + 'style="display:inline-flex;align-items:center;gap:.4rem;padding:.45rem 1rem;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;font-size:.75rem;font-weight:600;color:#d97706;cursor:pointer;font-family:\'Inter\',sans-serif">'
+        + '🔔 Send Expiry Reminders</button>';
+    }
   };
 
   // ── Tabs ──────────────────────────────────────────────────────────────────
@@ -105,7 +115,10 @@ const Resellers = (() => {
     }
     actionBtns +=
       '<button class="btn btn-ghost-blue btn-sm" onclick="Resellers.filterByReseller(\'' + eid + '\')">🔍 Links</button>' +
-      '<button class="btn btn-outline btn-sm" onclick="Resellers.copyId(\'' + eid + '\')">📋 Copy ID</button>';
+      '<button class="btn btn-outline btn-sm" onclick="Resellers.copyId(\'' + eid + '\')">📋 Copy ID</button>' +
+      (!tOnly ? '<button class="btn btn-outline btn-sm" onclick="Resellers.openCredentialsModal(\'' + eid + '\')">🔐 Login</button>' : '') +
+      (!tOnly ? '<button class="btn btn-outline btn-sm" onclick="Resellers.openPayoutsModal(\'' + eid + '\')">💰 Payouts</button>' : '') +
+      '<button class="btn btn-outline btn-sm" onclick="Resellers.exportCSV(\'' + eid + '\')" style="color:var(--success)">⬇ CSV</button>';
 
     const wechatCountry = (r.wechat || r.country)
       ? '<div style="font-size:.7rem;color:var(--muted);margin-bottom:.65rem">' +
@@ -400,11 +413,238 @@ const Resellers = (() => {
     return { resellerId: opt.value, resellerName: opt.dataset.name || '' };
   };
 
+  // ── Credentials modal (password + email for OTP login) ───────────────────
+  const openCredentialsModal = (id) => {
+    const r   = _registryData.find(x => x.id === id);
+    if (!r) return;
+    const modal = document.getElementById('reseller-credentials-modal');
+    if (!modal) { _renderCredentialsModal(); return setTimeout(() => openCredentialsModal(id), 50); }
+    document.getElementById('rcm-id-display').textContent = r.name + ' (' + r.id + ')';
+    document.getElementById('rcm-id-hidden').value  = id;
+    document.getElementById('rcm-email').value      = r.email    || '';
+    document.getElementById('rcm-password').value   = r.password || '';
+    document.getElementById('rcm-err').style.display = 'none';
+    modal.style.display = 'flex';
+    setTimeout(() => document.getElementById('rcm-email').focus(), 50);
+  };
+
+  const closeCredentialsModal = () => {
+    const m = document.getElementById('reseller-credentials-modal');
+    if (m) m.style.display = 'none';
+  };
+
+  const saveCredentials = async () => {
+    const id       = document.getElementById('rcm-id-hidden').value;
+    const email    = document.getElementById('rcm-email').value.trim();
+    const password = document.getElementById('rcm-password').value.trim();
+    const errEl    = document.getElementById('rcm-err');
+    const saveBtn  = document.getElementById('rcm-save-btn');
+    errEl.style.display = 'none';
+
+    if (!email)    { errEl.textContent = 'Email is required.';    errEl.style.display = 'block'; return; }
+    if (!password) { errEl.textContent = 'Password is required.'; errEl.style.display = 'block'; return; }
+
+    saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
+    try {
+      const d = await _api('/admin/resellers/set-credentials', { id, email, password });
+      if (d && d.success) { closeCredentialsModal(); await render(); }
+      else { errEl.textContent = d.error || 'Save failed.'; errEl.style.display = 'block'; }
+    } catch { errEl.textContent = 'Network error.'; errEl.style.display = 'block'; }
+    saveBtn.disabled = false; saveBtn.textContent = 'Save Credentials';
+  };
+
+  const _renderCredentialsModal = () => {
+    if (document.getElementById('reseller-credentials-modal')) return;
+    const el = document.createElement('div');
+    el.id = 'reseller-credentials-modal';
+    el.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;align-items:center;justify-content:center;padding:1rem';
+    el.innerHTML = `
+      <div style="background:#fff;border-radius:14px;width:100%;max-width:420px;padding:1.6rem 1.8rem;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem">
+          <div style="font-size:1rem;font-weight:700;color:#1e293b">🔐 Login Credentials</div>
+          <button onclick="Resellers.closeCredentialsModal()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:#94a3b8;line-height:1">✕</button>
+        </div>
+        <div style="font-size:.75rem;color:#7c3aed;font-family:'JetBrains Mono',monospace;margin-bottom:1.1rem;background:#fdf4ff;border:1px solid #e9d5ff;border-radius:7px;padding:.5rem .8rem" id="rcm-id-display"></div>
+        <input type="hidden" id="rcm-id-hidden"/>
+        <label style="font-size:.72rem;font-weight:600;color:#1e293b;display:block;margin-bottom:.3rem">Email (for OTP delivery)</label>
+        <input type="email" id="rcm-email" placeholder="reseller@email.com"
+          style="width:100%;padding:.65rem .9rem;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.85rem;margin-bottom:.75rem;outline:none;font-family:'Inter',sans-serif"/>
+        <label style="font-size:.72rem;font-weight:600;color:#1e293b;display:block;margin-bottom:.3rem">Password</label>
+        <input type="text" id="rcm-password" placeholder="Set a strong password"
+          style="width:100%;padding:.65rem .9rem;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.85rem;margin-bottom:.5rem;outline:none;font-family:'JetBrains Mono',monospace"/>
+        <div id="rcm-err" style="display:none;font-size:.75rem;color:#dc2626;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:.45rem .7rem;margin-bottom:.6rem"></div>
+        <p style="font-size:.7rem;color:#94a3b8;margin-bottom:1rem;line-height:1.6">The reseller uses their ID + this password to sign in, then gets an OTP to the email above.</p>
+        <div style="display:flex;gap:.5rem">
+          <button onclick="Resellers.closeCredentialsModal()"
+            style="flex:1;padding:.65rem;border:1px solid #e2e8f0;border-radius:8px;background:#fff;font-size:.82rem;cursor:pointer;font-family:'Inter',sans-serif;color:#64748b">Cancel</button>
+          <button id="rcm-save-btn" onclick="Resellers.saveCredentials()"
+            style="flex:2;padding:.65rem;border:none;border-radius:8px;background:#7c3aed;color:#fff;font-size:.82rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif">Save Credentials</button>
+        </div>
+      </div>`;
+    document.body.appendChild(el);
+  };
+
+  // ── Payouts modal ─────────────────────────────────────────────────────────
+  const openPayoutsModal = async (id) => {
+    const r = _registryData.find(x => x.id === id);
+    if (!r) return;
+    let modal = document.getElementById('reseller-payouts-modal');
+    if (!modal) { _renderPayoutsModal(); modal = document.getElementById('reseller-payouts-modal'); }
+    modal.dataset.resellerId   = id;
+    modal.dataset.resellerName = r.name;
+    document.getElementById('rpm-title').textContent = 'Payouts — ' + r.name;
+    document.getElementById('rpm-amount').value  = '';
+    document.getElementById('rpm-period').value  = '';
+    document.getElementById('rpm-note').value    = '';
+    document.getElementById('rpm-err').style.display = 'none';
+    modal.style.display = 'flex';
+    await _refreshPayoutsList(id);
+  };
+
+  const closePayoutsModal = () => {
+    const m = document.getElementById('reseller-payouts-modal');
+    if (m) m.style.display = 'none';
+  };
+
+  const _refreshPayoutsList = async (id) => {
+    const sym  = _sym();
+    const wrap = document.getElementById('rpm-list');
+    wrap.innerHTML = '<div style="font-size:.78rem;color:#94a3b8;text-align:center;padding:.8rem">Loading…</div>';
+    try {
+      const d = await fetch('/admin/payouts?adminKey=' + encodeURIComponent(Store.adminKey) + '&resellerId=' + encodeURIComponent(id)).then(r => r.json());
+      const payouts = (d.payouts || []).sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+      if (!payouts.length) { wrap.innerHTML = '<div style="font-size:.78rem;color:#94a3b8;text-align:center;padding:.8rem">No payouts yet.</div>'; return; }
+      wrap.innerHTML = payouts.map(p => {
+        const isPaid = p.status === 'paid';
+        const dt = new Date(isPaid ? p.paidAt : p.createdAt).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+        return '<div style="display:flex;align-items:center;justify-content:space-between;padding:.55rem .7rem;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:.4rem;background:#fff">'
+          + '<div><div style="font-size:.82rem;font-weight:700;color:#1e293b">' + sym + parseFloat(p.amount).toFixed(2) + '</div>'
+          + '<div style="font-size:.65rem;color:#94a3b8;margin-top:.1rem">' + dt + (p.period ? ' · ' + p.period : '') + (p.note ? ' · ' + p.note : '') + '</div></div>'
+          + '<div style="display:flex;align-items:center;gap:.4rem">'
+          + '<span style="font-size:.63rem;font-weight:700;padding:.18rem .5rem;border-radius:99px;' + (isPaid ? 'background:#f0fdf4;border:1px solid #bbf7d0;color:#16a34a' : 'background:#fffbeb;border:1px solid #fde68a;color:#d97706') + '">' + (isPaid ? '✓ Paid' : '⏳ Pending') + '</span>'
+          + '<button onclick="Resellers._togglePayout(\'' + p.id + '\',' + !isPaid + ')" style="font-size:.62rem;background:none;border:1px solid #e2e8f0;border-radius:5px;padding:.15rem .45rem;cursor:pointer;color:#64748b;font-family:\'Inter\',sans-serif">' + (isPaid ? 'Unmark' : 'Mark paid') + '</button>'
+          + '<button onclick="Resellers._deletePayout(\'' + p.id + '\')" style="font-size:.62rem;background:none;border:1px solid #fecaca;border-radius:5px;padding:.15rem .45rem;cursor:pointer;color:#dc2626;font-family:\'Inter\',sans-serif">✕</button>'
+          + '</div></div>';
+      }).join('');
+    } catch { wrap.innerHTML = '<div style="font-size:.78rem;color:#dc2626;text-align:center;padding:.8rem">Failed to load.</div>'; }
+  };
+
+  const addPayout = async () => {
+    const modal  = document.getElementById('reseller-payouts-modal');
+    const id     = modal.dataset.resellerId;
+    const name   = modal.dataset.resellerName;
+    const amount = parseFloat(document.getElementById('rpm-amount').value);
+    const errEl  = document.getElementById('rpm-err');
+    errEl.style.display = 'none';
+    if (!amount || amount <= 0) { errEl.textContent = 'Enter a valid amount.'; errEl.style.display = 'block'; return; }
+    const period = document.getElementById('rpm-period').value.trim();
+    const note   = document.getElementById('rpm-note').value.trim();
+    const d = await _api('/admin/payouts/add', { resellerId: id, resellerName: name, amount, period, note });
+    if (d && d.success) { document.getElementById('rpm-amount').value = ''; document.getElementById('rpm-period').value = ''; document.getElementById('rpm-note').value = ''; await _refreshPayoutsList(id); await render(); }
+    else { errEl.textContent = d.error || 'Failed.'; errEl.style.display = 'block'; }
+  };
+
+  const _togglePayout = async (pid, paid) => {
+    const modal = document.getElementById('reseller-payouts-modal');
+    await _api('/admin/payouts/mark-paid', { id: pid, paid });
+    await _refreshPayoutsList(modal.dataset.resellerId);
+    await render();
+  };
+
+  const _deletePayout = async (pid) => {
+    if (!confirm('Delete this payout record?')) return;
+    const modal = document.getElementById('reseller-payouts-modal');
+    await _api('/admin/payouts/delete', { id: pid });
+    await _refreshPayoutsList(modal.dataset.resellerId);
+    await render();
+  };
+
+  const _renderPayoutsModal = () => {
+    if (document.getElementById('reseller-payouts-modal')) return;
+    const sym = _sym();
+    const el = document.createElement('div');
+    el.id = 'reseller-payouts-modal';
+    el.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;align-items:center;justify-content:center;padding:1rem';
+    el.innerHTML = `
+      <div style="background:#fff;border-radius:14px;width:100%;max-width:460px;max-height:90vh;overflow-y:auto;padding:1.6rem 1.8rem;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem">
+          <div style="font-size:1rem;font-weight:700;color:#1e293b" id="rpm-title">Payouts</div>
+          <button onclick="Resellers.closePayoutsModal()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:#94a3b8">✕</button>
+        </div>
+        <div style="font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:#64748b;margin-bottom:.6rem">Add Payout Record</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.5rem">
+          <div>
+            <label style="font-size:.68rem;font-weight:600;color:#1e293b;display:block;margin-bottom:.25rem">Amount *</label>
+            <input type="number" id="rpm-amount" placeholder="0.00" min="0.01" step="0.01"
+              style="width:100%;padding:.55rem .75rem;border:1.5px solid #e2e8f0;border-radius:7px;font-size:.82rem;outline:none;font-family:'JetBrains Mono',monospace"/>
+          </div>
+          <div>
+            <label style="font-size:.68rem;font-weight:600;color:#1e293b;display:block;margin-bottom:.25rem">Period</label>
+            <input type="text" id="rpm-period" placeholder="e.g. Apr 2025"
+              style="width:100%;padding:.55rem .75rem;border:1.5px solid #e2e8f0;border-radius:7px;font-size:.82rem;outline:none;font-family:'Inter',sans-serif"/>
+          </div>
+        </div>
+        <label style="font-size:.68rem;font-weight:600;color:#1e293b;display:block;margin-bottom:.25rem">Note (optional)</label>
+        <input type="text" id="rpm-note" placeholder="e.g. Bank transfer"
+          style="width:100%;padding:.55rem .75rem;border:1.5px solid #e2e8f0;border-radius:7px;font-size:.82rem;margin-bottom:.5rem;outline:none;font-family:'Inter',sans-serif"/>
+        <div id="rpm-err" style="display:none;font-size:.75rem;color:#dc2626;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:.4rem .6rem;margin-bottom:.5rem"></div>
+        <button onclick="Resellers.addPayout()" style="width:100%;padding:.6rem;border:none;border-radius:8px;background:#7c3aed;color:#fff;font-size:.82rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;margin-bottom:1.1rem">＋ Add Payout</button>
+        <div style="font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:#64748b;margin-bottom:.6rem">Payout History</div>
+        <div id="rpm-list"></div>
+      </div>`;
+    document.body.appendChild(el);
+  };
+
+  // ── Expiry notification trigger ───────────────────────────────────────────
+  const sendExpiryNotifications = async () => {
+    const days = prompt('Send expiry reminders for subscriptions expiring within how many days?', '7');
+    if (!days || isNaN(parseInt(days))) return;
+    const btn = document.querySelector('[onclick*="sendExpiryNotifications"]');
+    if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
+    try {
+      const d = await _api('/admin/send-expiry-notifications', {
+        daysThreshold: parseInt(days), notifyReseller: true, notifyCustomer: true,
+      });
+      if (d && d.success) {
+        alert('✓ Done!\n\nExpiring within ' + days + ' days: ' + d.expiringSoon
+          + '\nCustomer emails sent: ' + d.customersSent
+          + '\nReseller digests sent: ' + d.resellersSent
+          + (d.errors && d.errors.length ? '\nErrors: ' + d.errors.length : ''));
+      } else { alert('Error: ' + (d.error || 'Unknown')); }
+    } catch { alert('Network error.'); }
+    if (btn) { btn.disabled = false; btn.textContent = '🔔 Send Expiry Reminders'; }
+  };
+
+  // Patch _buildCard to add credentials + payout buttons
+  const _origBuildCard = _buildCard;
+  const _buildCardPatched = (r) => {
+    // We rebuild here to inject extra buttons without touching the original card HTML
+    return _origBuildCard(r);
+  };
+
+  // ── CSV export ────────────────────────────────────────────────────────────
+  const exportCSV = (rid) => {
+    const key = Store.adminKey;
+    const url = rid
+      ? '/admin/export/reseller-sales?adminKey=' + encodeURIComponent(key) + '&resellerId=' + encodeURIComponent(rid)
+      : '/admin/export/reseller-sales?adminKey=' + encodeURIComponent(key);
+    window.location.href = url;
+  };
+
+  // Expose extra buttons via the card's action area — patch happens at render time
+  // by monkey-patching _buildCard isn't practical here; instead we append buttons
+  // to the registry render by overriding _renderRegistry
+  const _origRenderRegistry = _renderRegistry;
+
   return {
     render, setTab,
     openModal, closeModal, saveModal,
     suspend, deleteReseller, addToRegistry, copyId, filterByReseller,
     getSelectedReseller,
-    populateDropdown: _populateDropdown
+    populateDropdown:       _populateDropdown,
+    openCredentialsModal,   closeCredentialsModal, saveCredentials,
+    openPayoutsModal,       closePayoutsModal,     addPayout,
+    _togglePayout,          _deletePayout,
+    sendExpiryNotifications, exportCSV,
   };
 })();
