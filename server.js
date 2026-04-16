@@ -21,9 +21,12 @@ const TEMPLATES_FILE    = path.join(DATA_DIR, 'emailTemplates.json');
 const SETTINGS_FILE     = path.join(DATA_DIR, 'settings.json');
 const LANDING_FILE      = path.join(DATA_DIR, 'landingContent.json');
 const CHAT_FILE         = path.join(DATA_DIR, 'chats.json');
-const RESELLERS_FILE    = path.join(DATA_DIR, 'resellers.json');
+const RESELLERS_FILE     = path.join(DATA_DIR, 'resellers.json');
+const RESELLER_OTPS_FILE = path.join(DATA_DIR, 'resellerOtps.json');
+const PAYOUTS_FILE       = path.join(DATA_DIR, 'payouts.json');
 
 const LINK_EXPIRY_MS = 6 * 30 * 24 * 60 * 60 * 1000;
+const OTP_EXPIRY_MS  = 10 * 60 * 1000; // 10 minutes
 
 if (!fs.existsSync(DATA_DIR))       fs.mkdirSync(DATA_DIR);
 if (!fs.existsSync(BACKUP_DIR))     fs.mkdirSync(BACKUP_DIR);
@@ -47,7 +50,9 @@ if (!fs.existsSync(LANDING_FILE))   fs.writeFileSync(LANDING_FILE, JSON.stringif
 }, null, 2));
 if (!fs.existsSync(NOTIFY_FILE))    fs.writeFileSync(NOTIFY_FILE,   JSON.stringify({ enabled: false, message: '', type: 'info' }, null, 2));
 if (!fs.existsSync(CHAT_FILE))      fs.writeFileSync(CHAT_FILE,      JSON.stringify({}, null, 2));
-if (!fs.existsSync(RESELLERS_FILE)) fs.writeFileSync(RESELLERS_FILE, JSON.stringify([], null, 2));
+if (!fs.existsSync(RESELLERS_FILE))     fs.writeFileSync(RESELLERS_FILE,     JSON.stringify([], null, 2));
+if (!fs.existsSync(RESELLER_OTPS_FILE)) fs.writeFileSync(RESELLER_OTPS_FILE, JSON.stringify({}, null, 2));
+if (!fs.existsSync(PAYOUTS_FILE))       fs.writeFileSync(PAYOUTS_FILE,       JSON.stringify([], null, 2));
 if (!fs.existsSync(TEMPLATES_FILE)) fs.writeFileSync(TEMPLATES_FILE, JSON.stringify({"templates": [{"id": "welcome", "name": "✅ Welcome / Activation Confirmed", "subject": "Welcome to DTC — Your {{package}} is ready! 🎉", "body": "<!DOCTYPE html><html><head><meta charset=\"UTF-8\"/><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"/></head><body style=\"margin:0;padding:0;background:#f0f4ff;font-family:'Helvetica Neue',Arial,sans-serif\">\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#f0f4ff;padding:32px 16px\">\n<tr><td align=\"center\">\n<table width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"max-width:600px;width:100%;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #e2e8f0;box-shadow:0 4px 24px rgba(37,99,235,.08)\">\n\n<!-- Header -->\n<tr><td style=\"background:#2563eb;padding:32px 36px\">\n  <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n    <td style=\"font-size:28px;line-height:1\">⚡</td>\n    <td style=\"padding-left:12px\">\n      <div style=\"font-size:20px;font-weight:700;color:#ffffff;letter-spacing:-.02em\">DTC</div>\n      <div style=\"font-size:11px;color:rgba(255,255,255,.65);margin-top:2px;letter-spacing:.04em\">DIGITAL TOOLS CORNER</div>\n    </td>\n    <td align=\"right\">\n      <div style=\"font-size:13px;font-weight:700;color:rgba(255,255,255,.9)\">Activation Confirmed</div>\n      <div style=\"font-size:11px;color:rgba(255,255,255,.6);margin-top:2px\">{{package}}</div>\n    </td>\n  </tr></table>\n</td></tr>\n\n<!-- Body -->\n<tr><td style=\"padding:36px 36px 28px\">\n<h1 style=\"margin:0 0 8px;font-size:24px;font-weight:700;color:#1e293b;letter-spacing:-.02em;line-height:1.2\">Welcome to DTC, {{name}}! 🎉</h1><p style=\"margin:0 0 16px;font-size:15px;color:#475569;line-height:1.7\">Your <strong>{{package}}</strong> is now active and ready to use. Here is everything you need to get started.</p><div style=\"height:1px;background:#e2e8f0;margin:24px 0\"></div><table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#f8faff;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:10px\">\n<tr><td style=\"padding:10px 16px\">\n  <span style=\"font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.07em;font-weight:600\">Package</span>\n  <div style=\"font-size:14px;font-weight:600;color:#1e293b;margin-top:3px;font-family:monospace\">{{package}}</div>\n</td></tr></table><table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;margin-bottom:10px\">\n<tr><td style=\"padding:10px 16px\">\n  <span style=\"font-size:11px;color:#15803d;text-transform:uppercase;letter-spacing:.07em;font-weight:600\">Status</span>\n  <div style=\"font-size:14px;font-weight:600;color:#15803d;margin-top:3px;font-family:monospace\">✓ Active</div>\n</td></tr></table><div style=\"height:1px;background:#e2e8f0;margin:24px 0\"></div><h2 style=\"margin:0 0 6px;font-size:16px;font-weight:700;color:#1e293b\">What to do next</h2><table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:10px\">\n<tr>\n  <td width=\"32\" valign=\"top\"><div style=\"width:26px;height:26px;background:#2563eb20;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#2563eb;text-align:center;line-height:26px\">1</div></td>\n  <td style=\"padding-left:10px;font-size:14px;color:#475569;line-height:1.6;padding-top:3px\">Sign in to your account and check your plan status in Settings → Billing.</td>\n</tr></table><table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:10px\">\n<tr>\n  <td width=\"32\" valign=\"top\"><div style=\"width:26px;height:26px;background:#2563eb20;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#2563eb;text-align:center;line-height:26px\">2</div></td>\n  <td style=\"padding-left:10px;font-size:14px;color:#475569;line-height:1.6;padding-top:3px\">Start a conversation to confirm everything is working correctly.</td>\n</tr></table><table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:10px\">\n<tr>\n  <td width=\"32\" valign=\"top\"><div style=\"width:26px;height:26px;background:#2563eb20;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#2563eb;text-align:center;line-height:26px\">3</div></td>\n  <td style=\"padding-left:10px;font-size:14px;color:#475569;line-height:1.6;padding-top:3px\">Reach out on WeChat or email us if you need any help.</td>\n</tr></table><div style=\"height:1px;background:#e2e8f0;margin:24px 0\"></div><p style=\"margin:0 0 0;font-size:13px;color:#64748b;line-height:1.7\">Thank you for choosing DTC. We are glad to have you.</p>\n</td></tr>\n\n<!-- Footer -->\n<tr><td style=\"background:#f8faff;border-top:1px solid #e2e8f0;padding:18px 36px\">\n  <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n    <td style=\"font-size:12px;color:#94a3b8;line-height:1.6\">\n      DTC — Digital Tools Corner &nbsp;·&nbsp; \n      <a href=\"mailto:dtc@dtc1.shop\" style=\"color:#94a3b8;text-decoration:none\">dtc@dtc1.shop</a>\n    </td>\n    <td align=\"right\" style=\"font-size:11px;color:#cbd5e1\">Automated email</td>\n  </tr></table>\n</td></tr>\n\n</table>\n</td></tr></table>\n</body></html>", "lastModified": "2026-04-06T23:16:18.326444Z"}, {"id": "renewal-30d", "name": "⏰ Renewal Reminder (30 days)", "subject": "Your {{package}} subscription expires in {{daysLeft}} days — DTC", "body": "<!DOCTYPE html><html><head><meta charset=\"UTF-8\"/><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"/></head><body style=\"margin:0;padding:0;background:#f0f4ff;font-family:'Helvetica Neue',Arial,sans-serif\">\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#f0f4ff;padding:32px 16px\">\n<tr><td align=\"center\">\n<table width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"max-width:600px;width:100%;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #e2e8f0;box-shadow:0 4px 24px rgba(37,99,235,.08)\">\n\n<!-- Header -->\n<tr><td style=\"background:#d97706;padding:32px 36px\">\n  <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n    <td style=\"font-size:28px;line-height:1\">⏰</td>\n    <td style=\"padding-left:12px\">\n      <div style=\"font-size:20px;font-weight:700;color:#ffffff;letter-spacing:-.02em\">DTC</div>\n      <div style=\"font-size:11px;color:rgba(255,255,255,.65);margin-top:2px;letter-spacing:.04em\">DIGITAL TOOLS CORNER</div>\n    </td>\n    <td align=\"right\">\n      <div style=\"font-size:13px;font-weight:700;color:rgba(255,255,255,.9)\">Renewal Reminder</div>\n      <div style=\"font-size:11px;color:rgba(255,255,255,.6);margin-top:2px\">Action needed</div>\n    </td>\n  </tr></table>\n</td></tr>\n\n<!-- Body -->\n<tr><td style=\"padding:36px 36px 28px\">\n<h1 style=\"margin:0 0 8px;font-size:24px;font-weight:700;color:#1e293b;letter-spacing:-.02em;line-height:1.2\">Your subscription renews in {{daysLeft}} days</h1><p style=\"margin:0 0 16px;font-size:15px;color:#475569;line-height:1.7\">Hi <strong>{{name}}</strong>, your <strong>{{package}}</strong> subscription will expire on <strong>{{expiry}}</strong>. Renew early to avoid any interruption.</p><div style=\"height:1px;background:#e2e8f0;margin:24px 0\"></div><table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#f8faff;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:10px\">\n<tr><td style=\"padding:10px 16px\">\n  <span style=\"font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.07em;font-weight:600\">Package</span>\n  <div style=\"font-size:14px;font-weight:600;color:#1e293b;margin-top:3px;font-family:monospace\">{{package}}</div>\n</td></tr></table><table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#fffbeb;border:1px solid #fde68a;border-radius:8px;margin-bottom:10px\">\n<tr><td style=\"padding:10px 16px\">\n  <span style=\"font-size:11px;color:#b45309;text-transform:uppercase;letter-spacing:.07em;font-weight:600\">Expiry Date</span>\n  <div style=\"font-size:14px;font-weight:600;color:#b45309;margin-top:3px;font-family:monospace\">{{expiry}}</div>\n</td></tr></table><table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#fffbeb;border:1px solid #fde68a;border-radius:8px;margin-bottom:10px\">\n<tr><td style=\"padding:10px 16px\">\n  <span style=\"font-size:11px;color:#b45309;text-transform:uppercase;letter-spacing:.07em;font-weight:600\">Days Remaining</span>\n  <div style=\"font-size:14px;font-weight:600;color:#b45309;margin-top:3px;font-family:monospace\">{{daysLeft}} days</div>\n</td></tr></table><div style=\"height:1px;background:#e2e8f0;margin:24px 0\"></div><table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;margin-bottom:20px\">\n<tr><td style=\"padding:16px 20px\">\n  <div style=\"font-size:20px;margin-bottom:6px\">💡</div>\n  <div style=\"font-size:14px;font-weight:700;color:#1d4ed8;margin-bottom:4px\">How to Renew</div>\n  <div style=\"font-size:13px;color:#475569;line-height:1.6\">Contact us on WeChat or reply to this email and we will set up your renewal link right away.</div>\n</td></tr></table><p style=\"margin:0 0 0;font-size:13px;color:#64748b;line-height:1.7\">Renewing takes less than 5 minutes. Contact us today to keep your access uninterrupted.</p>\n</td></tr>\n\n<!-- Footer -->\n<tr><td style=\"background:#f8faff;border-top:1px solid #e2e8f0;padding:18px 36px\">\n  <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n    <td style=\"font-size:12px;color:#94a3b8;line-height:1.6\">\n      DTC — Digital Tools Corner &nbsp;·&nbsp; \n      <a href=\"mailto:dtc@dtc1.shop\" style=\"color:#94a3b8;text-decoration:none\">dtc@dtc1.shop</a>\n    </td>\n    <td align=\"right\" style=\"font-size:11px;color:#cbd5e1\">Automated email</td>\n  </tr></table>\n</td></tr>\n\n</table>\n</td></tr></table>\n</body></html>", "lastModified": "2026-04-06T23:16:18.326466Z"}, {"id": "renewal-urgent", "name": "🚨 Urgent Renewal (3 days)", "subject": "Last chance to renew — expires {{expiry}} — DTC", "body": "<!DOCTYPE html><html><head><meta charset=\"UTF-8\"/><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"/></head><body style=\"margin:0;padding:0;background:#f0f4ff;font-family:'Helvetica Neue',Arial,sans-serif\">\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#f0f4ff;padding:32px 16px\">\n<tr><td align=\"center\">\n<table width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"max-width:600px;width:100%;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #e2e8f0;box-shadow:0 4px 24px rgba(37,99,235,.08)\">\n\n<!-- Header -->\n<tr><td style=\"background:#dc2626;padding:32px 36px\">\n  <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n    <td style=\"font-size:28px;line-height:1\">🚨</td>\n    <td style=\"padding-left:12px\">\n      <div style=\"font-size:20px;font-weight:700;color:#ffffff;letter-spacing:-.02em\">DTC</div>\n      <div style=\"font-size:11px;color:rgba(255,255,255,.65);margin-top:2px;letter-spacing:.04em\">DIGITAL TOOLS CORNER</div>\n    </td>\n    <td align=\"right\">\n      <div style=\"font-size:13px;font-weight:700;color:rgba(255,255,255,.9)\">Urgent Reminder</div>\n      <div style=\"font-size:11px;color:rgba(255,255,255,.6);margin-top:2px\">Expires {{expiry}}</div>\n    </td>\n  </tr></table>\n</td></tr>\n\n<!-- Body -->\n<tr><td style=\"padding:36px 36px 28px\">\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#fef2f2;border:1px solid #fecaca;border-radius:10px;margin-bottom:20px\">\n<tr><td style=\"padding:16px 20px\">\n  <div style=\"font-size:20px;margin-bottom:6px\">🚨</div>\n  <div style=\"font-size:14px;font-weight:700;color:#dc2626;margin-bottom:4px\">Urgent — Your subscription expires in {{daysLeft}} days</div>\n  <div style=\"font-size:13px;color:#7f1d1d;line-height:1.6\">After expiry your access will be suspended. Contact us immediately to renew.</div>\n</td></tr></table><h1 style=\"margin:0 0 8px;font-size:24px;font-weight:700;color:#1e293b;letter-spacing:-.02em;line-height:1.2\">Last chance to renew, {{name}}</h1><p style=\"margin:0 0 16px;font-size:15px;color:#475569;line-height:1.7\">Your <strong>{{package}}</strong> subscription expires on <strong>{{expiry}}</strong>. This is your final reminder before access is suspended.</p><div style=\"height:1px;background:#e2e8f0;margin:24px 0\"></div><table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#f8faff;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:10px\">\n<tr><td style=\"padding:10px 16px\">\n  <span style=\"font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.07em;font-weight:600\">Package</span>\n  <div style=\"font-size:14px;font-weight:600;color:#1e293b;margin-top:3px;font-family:monospace\">{{package}}</div>\n</td></tr></table><table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#fef2f2;border:1px solid #fecaca;border-radius:8px;margin-bottom:10px\">\n<tr><td style=\"padding:10px 16px\">\n  <span style=\"font-size:11px;color:#dc2626;text-transform:uppercase;letter-spacing:.07em;font-weight:600\">⚠ Expires</span>\n  <div style=\"font-size:14px;font-weight:600;color:#dc2626;margin-top:3px;font-family:monospace\">{{expiry}}</div>\n</td></tr></table><div style=\"height:1px;background:#e2e8f0;margin:24px 0\"></div><p style=\"margin:0 0 0;font-size:14px;color:#475569;line-height:1.7\"><strong>To renew:</strong> Contact us on WeChat or reply to this email with your renewal request. We will generate your renewal link immediately.</p>\n</td></tr>\n\n<!-- Footer -->\n<tr><td style=\"background:#f8faff;border-top:1px solid #e2e8f0;padding:18px 36px\">\n  <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n    <td style=\"font-size:12px;color:#94a3b8;line-height:1.6\">\n      DTC — Digital Tools Corner &nbsp;·&nbsp; \n      <a href=\"mailto:dtc@dtc1.shop\" style=\"color:#94a3b8;text-decoration:none\">dtc@dtc1.shop</a>\n    </td>\n    <td align=\"right\" style=\"font-size:11px;color:#cbd5e1\">Automated email</td>\n  </tr></table>\n</td></tr>\n\n</table>\n</td></tr></table>\n</body></html>", "lastModified": "2026-04-06T23:16:18.326471Z"}, {"id": "expired", "name": "⏱ Subscription Expired", "subject": "Your {{package}} subscription has expired — DTC", "body": "<!DOCTYPE html><html><head><meta charset=\"UTF-8\"/><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"/></head><body style=\"margin:0;padding:0;background:#f0f4ff;font-family:'Helvetica Neue',Arial,sans-serif\">\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#f0f4ff;padding:32px 16px\">\n<tr><td align=\"center\">\n<table width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"max-width:600px;width:100%;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #e2e8f0;box-shadow:0 4px 24px rgba(37,99,235,.08)\">\n\n<!-- Header -->\n<tr><td style=\"background:#dc2626;padding:32px 36px\">\n  <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n    <td style=\"font-size:28px;line-height:1\">⏱</td>\n    <td style=\"padding-left:12px\">\n      <div style=\"font-size:20px;font-weight:700;color:#ffffff;letter-spacing:-.02em\">DTC</div>\n      <div style=\"font-size:11px;color:rgba(255,255,255,.65);margin-top:2px;letter-spacing:.04em\">DIGITAL TOOLS CORNER</div>\n    </td>\n    <td align=\"right\">\n      <div style=\"font-size:13px;font-weight:700;color:rgba(255,255,255,.9)\">Subscription Expired</div>\n      <div style=\"font-size:11px;color:rgba(255,255,255,.6);margin-top:2px\">{{package}}</div>\n    </td>\n  </tr></table>\n</td></tr>\n\n<!-- Body -->\n<tr><td style=\"padding:36px 36px 28px\">\n<h1 style=\"margin:0 0 8px;font-size:24px;font-weight:700;color:#1e293b;letter-spacing:-.02em;line-height:1.2\">Your subscription has ended</h1><p style=\"margin:0 0 16px;font-size:15px;color:#475569;line-height:1.7\">Hi <strong>{{name}}</strong>, your <strong>{{package}}</strong> subscription has expired and your access has been suspended.</p><div style=\"height:1px;background:#e2e8f0;margin:24px 0\"></div><table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#fef2f2;border:1px solid #fecaca;border-radius:10px;margin-bottom:20px\">\n<tr><td style=\"padding:16px 20px\">\n  <div style=\"font-size:20px;margin-bottom:6px\">⏱</div>\n  <div style=\"font-size:14px;font-weight:700;color:#dc2626;margin-bottom:4px\">Access Suspended</div>\n  <div style=\"font-size:13px;color:#475569;line-height:1.6\">Your {{package}} access ended on {{expiry}}. Renew now to restore access immediately.</div>\n</td></tr></table><div style=\"height:1px;background:#e2e8f0;margin:24px 0\"></div><h2 style=\"margin:0 0 6px;font-size:16px;font-weight:700;color:#1e293b\">Renew now — restore access in minutes</h2><table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:10px\">\n<tr>\n  <td width=\"32\" valign=\"top\"><div style=\"width:26px;height:26px;background:#dc262620;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#dc2626;text-align:center;line-height:26px\">1</div></td>\n  <td style=\"padding-left:10px;font-size:14px;color:#475569;line-height:1.6;padding-top:3px\">Contact us on WeChat or reply to this email.</td>\n</tr></table><table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:10px\">\n<tr>\n  <td width=\"32\" valign=\"top\"><div style=\"width:26px;height:26px;background:#dc262620;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#dc2626;text-align:center;line-height:26px\">2</div></td>\n  <td style=\"padding-left:10px;font-size:14px;color:#475569;line-height:1.6;padding-top:3px\">We will send you a renewal activation link.</td>\n</tr></table><table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:10px\">\n<tr>\n  <td width=\"32\" valign=\"top\"><div style=\"width:26px;height:26px;background:#dc262620;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#dc2626;text-align:center;line-height:26px\">3</div></td>\n  <td style=\"padding-left:10px;font-size:14px;color:#475569;line-height:1.6;padding-top:3px\">Complete the form and your access is restored immediately.</td>\n</tr></table><div style=\"height:1px;background:#e2e8f0;margin:24px 0\"></div><p style=\"margin:0 0 0;font-size:13px;color:#64748b;line-height:1.7\">Questions? Reach us at <a href=\"mailto:dtc@dtc1.shop\" style=\"color:#2563eb\">dtc@dtc1.shop</a> or on WeChat.</p>\n</td></tr>\n\n<!-- Footer -->\n<tr><td style=\"background:#f8faff;border-top:1px solid #e2e8f0;padding:18px 36px\">\n  <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n    <td style=\"font-size:12px;color:#94a3b8;line-height:1.6\">\n      DTC — Digital Tools Corner &nbsp;·&nbsp; \n      <a href=\"mailto:dtc@dtc1.shop\" style=\"color:#94a3b8;text-decoration:none\">dtc@dtc1.shop</a>\n    </td>\n    <td align=\"right\" style=\"font-size:11px;color:#cbd5e1\">Automated email</td>\n  </tr></table>\n</td></tr>\n\n</table>\n</td></tr></table>\n</body></html>", "lastModified": "2026-04-06T23:16:18.326475Z"}, {"id": "promo", "name": "🎁 Promotional / Special Offer", "subject": "Exclusive offer for DTC customers — {{name}} 🎁", "body": "<!DOCTYPE html><html><head><meta charset=\"UTF-8\"/><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"/></head><body style=\"margin:0;padding:0;background:#f0f4ff;font-family:'Helvetica Neue',Arial,sans-serif\">\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#f0f4ff;padding:32px 16px\">\n<tr><td align=\"center\">\n<table width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"max-width:600px;width:100%;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #e2e8f0;box-shadow:0 4px 24px rgba(37,99,235,.08)\">\n\n<!-- Header -->\n<tr><td style=\"background:#15803d;padding:32px 36px\">\n  <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n    <td style=\"font-size:28px;line-height:1\">🎁</td>\n    <td style=\"padding-left:12px\">\n      <div style=\"font-size:20px;font-weight:700;color:#ffffff;letter-spacing:-.02em\">DTC</div>\n      <div style=\"font-size:11px;color:rgba(255,255,255,.65);margin-top:2px;letter-spacing:.04em\">DIGITAL TOOLS CORNER</div>\n    </td>\n    <td align=\"right\">\n      <div style=\"font-size:13px;font-weight:700;color:rgba(255,255,255,.9)\">Special Offer</div>\n      <div style=\"font-size:11px;color:rgba(255,255,255,.6);margin-top:2px\">Exclusive for you</div>\n    </td>\n  </tr></table>\n</td></tr>\n\n<!-- Body -->\n<tr><td style=\"padding:36px 36px 28px\">\n<h1 style=\"margin:0 0 8px;font-size:24px;font-weight:700;color:#1e293b;letter-spacing:-.02em;line-height:1.2\">Exclusive offer for you, {{name}} 🎁</h1><p style=\"margin:0 0 16px;font-size:15px;color:#475569;line-height:1.7\">As a valued DTC customer, we are offering you an exclusive deal on your next subscription. Limited time only.</p><div style=\"height:1px;background:#e2e8f0;margin:24px 0\"></div><table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;margin-bottom:20px\">\n<tr><td style=\"padding:16px 20px\">\n  <div style=\"font-size:20px;margin-bottom:6px\">🎉</div>\n  <div style=\"font-size:14px;font-weight:700;color:#15803d;margin-bottom:4px\">Special Offer — Limited Time</div>\n  <div style=\"font-size:13px;color:#475569;line-height:1.6\">Upgrade or renew your plan and get an exclusive deal available only to existing customers. Contact us on WeChat to claim it before it expires.</div>\n</td></tr></table><div style=\"height:1px;background:#e2e8f0;margin:24px 0\"></div><h2 style=\"margin:0 0 6px;font-size:16px;font-weight:700;color:#1e293b\">What is included</h2><table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:10px\">\n<tr>\n  <td width=\"32\" valign=\"top\"><div style=\"width:26px;height:26px;background:#15803d20;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#15803d;text-align:center;line-height:26px\">1</div></td>\n  <td style=\"padding-left:10px;font-size:14px;color:#475569;line-height:1.6;padding-top:3px\">Access to all premium AI tools at a discounted rate.</td>\n</tr></table><table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:10px\">\n<tr>\n  <td width=\"32\" valign=\"top\"><div style=\"width:26px;height:26px;background:#15803d20;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#15803d;text-align:center;line-height:26px\">2</div></td>\n  <td style=\"padding-left:10px;font-size:14px;color:#475569;line-height:1.6;padding-top:3px\">Priority processing — your link is activated same day.</td>\n</tr></table><table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:10px\">\n<tr>\n  <td width=\"32\" valign=\"top\"><div style=\"width:26px;height:26px;background:#15803d20;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#15803d;text-align:center;line-height:26px\">3</div></td>\n  <td style=\"padding-left:10px;font-size:14px;color:#475569;line-height:1.6;padding-top:3px\">Dedicated support via WeChat throughout your subscription.</td>\n</tr></table><div style=\"height:1px;background:#e2e8f0;margin:24px 0\"></div><p style=\"margin:0 0 0;font-size:13px;color:#64748b;line-height:1.7\">To claim your offer, simply contact us on WeChat and mention this email. Offer available while stocks last.</p>\n</td></tr>\n\n<!-- Footer -->\n<tr><td style=\"background:#f8faff;border-top:1px solid #e2e8f0;padding:18px 36px\">\n  <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n    <td style=\"font-size:12px;color:#94a3b8;line-height:1.6\">\n      DTC — Digital Tools Corner &nbsp;·&nbsp; \n      <a href=\"mailto:dtc@dtc1.shop\" style=\"color:#94a3b8;text-decoration:none\">dtc@dtc1.shop</a>\n    </td>\n    <td align=\"right\" style=\"font-size:11px;color:#cbd5e1\">Automated email</td>\n  </tr></table>\n</td></tr>\n\n</table>\n</td></tr></table>\n</body></html>", "lastModified": "2026-04-06T23:16:18.326478Z"}, {"id": "announcement", "name": "📢 General Announcement", "subject": "Important update from DTC", "body": "<!DOCTYPE html><html><head><meta charset=\"UTF-8\"/><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"/></head><body style=\"margin:0;padding:0;background:#f0f4ff;font-family:'Helvetica Neue',Arial,sans-serif\">\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#f0f4ff;padding:32px 16px\">\n<tr><td align=\"center\">\n<table width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"max-width:600px;width:100%;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #e2e8f0;box-shadow:0 4px 24px rgba(37,99,235,.08)\">\n\n<!-- Header -->\n<tr><td style=\"background:#6366f1;padding:32px 36px\">\n  <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n    <td style=\"font-size:28px;line-height:1\">📢</td>\n    <td style=\"padding-left:12px\">\n      <div style=\"font-size:20px;font-weight:700;color:#ffffff;letter-spacing:-.02em\">DTC</div>\n      <div style=\"font-size:11px;color:rgba(255,255,255,.65);margin-top:2px;letter-spacing:.04em\">DIGITAL TOOLS CORNER</div>\n    </td>\n    <td align=\"right\">\n      <div style=\"font-size:13px;font-weight:700;color:rgba(255,255,255,.9)\">Announcement</div>\n      <div style=\"font-size:11px;color:rgba(255,255,255,.6);margin-top:2px\">DTC Update</div>\n    </td>\n  </tr></table>\n</td></tr>\n\n<!-- Body -->\n<tr><td style=\"padding:36px 36px 28px\">\n<h1 style=\"margin:0 0 8px;font-size:24px;font-weight:700;color:#1e293b;letter-spacing:-.02em;line-height:1.2\">Important update from DTC</h1><p style=\"margin:0 0 16px;font-size:15px;color:#475569;line-height:1.7\">Hi <strong>{{name}}</strong>, we have something important to share with all our customers.</p><div style=\"height:1px;background:#e2e8f0;margin:24px 0\"></div><table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#f8faff;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:10px\">\n<tr><td style=\"padding:10px 16px\">\n  <span style=\"font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.07em;font-weight:600\">Package</span>\n  <div style=\"font-size:14px;font-weight:600;color:#1e293b;margin-top:3px;font-family:monospace\">{{package}}</div>\n</td></tr></table><div style=\"height:1px;background:#e2e8f0;margin:24px 0\"></div><p style=\"margin:0 0 12px;font-size:15px;color:#1e293b;line-height:1.7\"><strong>[Write your announcement here]</strong></p><p style=\"margin:0 0 20px;font-size:14px;color:#475569;line-height:1.7\">[Add more details about the update, what it means for customers, and any action required.]</p><div style=\"height:1px;background:#e2e8f0;margin:24px 0\"></div><p style=\"margin:0 0 0;font-size:13px;color:#64748b;line-height:1.7\">If you have any questions about this update, reply to this email or contact us on WeChat. We are always happy to help.</p>\n</td></tr>\n\n<!-- Footer -->\n<tr><td style=\"background:#f8faff;border-top:1px solid #e2e8f0;padding:18px 36px\">\n  <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n    <td style=\"font-size:12px;color:#94a3b8;line-height:1.6\">\n      DTC — Digital Tools Corner &nbsp;·&nbsp; \n      <a href=\"mailto:dtc@dtc1.shop\" style=\"color:#94a3b8;text-decoration:none\">dtc@dtc1.shop</a>\n    </td>\n    <td align=\"right\" style=\"font-size:11px;color:#cbd5e1\">Automated email</td>\n  </tr></table>\n</td></tr>\n\n</table>\n</td></tr></table>\n</body></html>", "lastModified": "2026-04-06T23:16:18.326484Z"}, {"id": "payment-thanks", "name": "💳 Payment Received", "subject": "Payment received — thank you, {{name}}! — DTC", "body": "<!DOCTYPE html><html><head><meta charset=\"UTF-8\"/><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"/></head><body style=\"margin:0;padding:0;background:#f0f4ff;font-family:'Helvetica Neue',Arial,sans-serif\">\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#f0f4ff;padding:32px 16px\">\n<tr><td align=\"center\">\n<table width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"max-width:600px;width:100%;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #e2e8f0;box-shadow:0 4px 24px rgba(37,99,235,.08)\">\n\n<!-- Header -->\n<tr><td style=\"background:#0891b2;padding:32px 36px\">\n  <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n    <td style=\"font-size:28px;line-height:1\">💳</td>\n    <td style=\"padding-left:12px\">\n      <div style=\"font-size:20px;font-weight:700;color:#ffffff;letter-spacing:-.02em\">DTC</div>\n      <div style=\"font-size:11px;color:rgba(255,255,255,.65);margin-top:2px;letter-spacing:.04em\">DIGITAL TOOLS CORNER</div>\n    </td>\n    <td align=\"right\">\n      <div style=\"font-size:13px;font-weight:700;color:rgba(255,255,255,.9)\">Payment Received</div>\n      <div style=\"font-size:11px;color:rgba(255,255,255,.6);margin-top:2px\">Thank you</div>\n    </td>\n  </tr></table>\n</td></tr>\n\n<!-- Body -->\n<tr><td style=\"padding:36px 36px 28px\">\n<h1 style=\"margin:0 0 8px;font-size:24px;font-weight:700;color:#1e293b;letter-spacing:-.02em;line-height:1.2\">Payment received — thank you, {{name}}!</h1><p style=\"margin:0 0 16px;font-size:15px;color:#475569;line-height:1.7\">We have received your payment and your activation link is being processed. You will hear from us shortly.</p><div style=\"height:1px;background:#e2e8f0;margin:24px 0\"></div><table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#f8faff;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:10px\">\n<tr><td style=\"padding:10px 16px\">\n  <span style=\"font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.07em;font-weight:600\">Package</span>\n  <div style=\"font-size:14px;font-weight:600;color:#1e293b;margin-top:3px;font-family:monospace\">{{package}}</div>\n</td></tr></table><table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#fffbeb;border:1px solid #fde68a;border-radius:8px;margin-bottom:10px\">\n<tr><td style=\"padding:10px 16px\">\n  <span style=\"font-size:11px;color:#b45309;text-transform:uppercase;letter-spacing:.07em;font-weight:600\">Status</span>\n  <div style=\"font-size:14px;font-weight:600;color:#b45309;margin-top:3px;font-family:monospace\">⏳ Processing — we will be in touch shortly</div>\n</td></tr></table><div style=\"height:1px;background:#e2e8f0;margin:24px 0\"></div><h2 style=\"margin:0 0 6px;font-size:16px;font-weight:700;color:#1e293b\">What happens next</h2><table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:10px\">\n<tr>\n  <td width=\"32\" valign=\"top\"><div style=\"width:26px;height:26px;background:#2563eb20;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#2563eb;text-align:center;line-height:26px\">1</div></td>\n  <td style=\"padding-left:10px;font-size:14px;color:#475569;line-height:1.6;padding-top:3px\">We verify your payment and prepare your activation link. This usually takes a few hours.</td>\n</tr></table><table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:10px\">\n<tr>\n  <td width=\"32\" valign=\"top\"><div style=\"width:26px;height:26px;background:#2563eb20;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#2563eb;text-align:center;line-height:26px\">2</div></td>\n  <td style=\"padding-left:10px;font-size:14px;color:#475569;line-height:1.6;padding-top:3px\">You receive your unique activation link via WeChat or email.</td>\n</tr></table><table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:10px\">\n<tr>\n  <td width=\"32\" valign=\"top\"><div style=\"width:26px;height:26px;background:#2563eb20;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#2563eb;text-align:center;line-height:26px\">3</div></td>\n  <td style=\"padding-left:10px;font-size:14px;color:#475569;line-height:1.6;padding-top:3px\">You submit your account details and your subscription is activated.</td>\n</tr></table><div style=\"height:1px;background:#e2e8f0;margin:24px 0\"></div><p style=\"margin:0 0 0;font-size:13px;color:#64748b;line-height:1.7\">Thank you for your trust in DTC. If you have any questions in the meantime, contact us on WeChat.</p>\n</td></tr>\n\n<!-- Footer -->\n<tr><td style=\"background:#f8faff;border-top:1px solid #e2e8f0;padding:18px 36px\">\n  <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n    <td style=\"font-size:12px;color:#94a3b8;line-height:1.6\">\n      DTC — Digital Tools Corner &nbsp;·&nbsp; \n      <a href=\"mailto:dtc@dtc1.shop\" style=\"color:#94a3b8;text-decoration:none\">dtc@dtc1.shop</a>\n    </td>\n    <td align=\"right\" style=\"font-size:11px;color:#cbd5e1\">Automated email</td>\n  </tr></table>\n</td></tr>\n\n</table>\n</td></tr></table>\n</body></html>", "lastModified": "2026-04-06T23:16:18.326488Z"}, {"id": "win-back", "name": "💙 Win Back / Re-engagement", "subject": "We miss you, {{name}} — come back to DTC", "body": "<!DOCTYPE html><html><head><meta charset=\"UTF-8\"/><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"/></head><body style=\"margin:0;padding:0;background:#f0f4ff;font-family:'Helvetica Neue',Arial,sans-serif\">\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#f0f4ff;padding:32px 16px\">\n<tr><td align=\"center\">\n<table width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"max-width:600px;width:100%;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #e2e8f0;box-shadow:0 4px 24px rgba(37,99,235,.08)\">\n\n<!-- Header -->\n<tr><td style=\"background:#2563eb;padding:32px 36px\">\n  <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n    <td style=\"font-size:28px;line-height:1\">💙</td>\n    <td style=\"padding-left:12px\">\n      <div style=\"font-size:20px;font-weight:700;color:#ffffff;letter-spacing:-.02em\">DTC</div>\n      <div style=\"font-size:11px;color:rgba(255,255,255,.65);margin-top:2px;letter-spacing:.04em\">DIGITAL TOOLS CORNER</div>\n    </td>\n    <td align=\"right\">\n      <div style=\"font-size:13px;font-weight:700;color:rgba(255,255,255,.9)\">We Miss You</div>\n      <div style=\"font-size:11px;color:rgba(255,255,255,.6);margin-top:2px\">Come back to DTC</div>\n    </td>\n  </tr></table>\n</td></tr>\n\n<!-- Body -->\n<tr><td style=\"padding:36px 36px 28px\">\n<h1 style=\"margin:0 0 8px;font-size:24px;font-weight:700;color:#1e293b;letter-spacing:-.02em;line-height:1.2\">We miss you, {{name}}</h1><p style=\"margin:0 0 16px;font-size:15px;color:#475569;line-height:1.7\">Your <strong>{{package}}</strong> subscription expired on <strong>{{expiry}}</strong>. We would love to have you back.</p><div style=\"height:1px;background:#e2e8f0;margin:24px 0\"></div><table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;margin-bottom:20px\">\n<tr><td style=\"padding:16px 20px\">\n  <div style=\"font-size:20px;margin-bottom:6px\">💙</div>\n  <div style=\"font-size:14px;font-weight:700;color:#1d4ed8;margin-bottom:4px\">Special returning customer offer</div>\n  <div style=\"font-size:13px;color:#475569;line-height:1.6\">As a previous DTC customer, you qualify for our returning customer rate. Contact us on WeChat to find out more.</div>\n</td></tr></table><div style=\"height:1px;background:#e2e8f0;margin:24px 0\"></div><h2 style=\"margin:0 0 6px;font-size:16px;font-weight:700;color:#1e293b\">Why customers come back to DTC</h2><table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:10px\">\n<tr>\n  <td width=\"32\" valign=\"top\"><div style=\"width:26px;height:26px;background:#2563eb20;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#2563eb;text-align:center;line-height:26px\">1</div></td>\n  <td style=\"padding-left:10px;font-size:14px;color:#475569;line-height:1.6;padding-top:3px\">Same-day activation — your link is processed within hours.</td>\n</tr></table><table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:10px\">\n<tr>\n  <td width=\"32\" valign=\"top\"><div style=\"width:26px;height:26px;background:#2563eb20;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#2563eb;text-align:center;line-height:26px\">2</div></td>\n  <td style=\"padding-left:10px;font-size:14px;color:#475569;line-height:1.6;padding-top:3px\">Flexible packages — monthly, quarterly, or annual plans.</td>\n</tr></table><table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:10px\">\n<tr>\n  <td width=\"32\" valign=\"top\"><div style=\"width:26px;height:26px;background:#2563eb20;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#2563eb;text-align:center;line-height:26px\">3</div></td>\n  <td style=\"padding-left:10px;font-size:14px;color:#475569;line-height:1.6;padding-top:3px\">Dedicated WeChat support throughout your subscription.</td>\n</tr></table><div style=\"height:1px;background:#e2e8f0;margin:24px 0\"></div><p style=\"margin:0 0 0;font-size:13px;color:#64748b;line-height:1.7\">Ready to get back on board? Contact us on WeChat and we will set everything up for you.</p>\n</td></tr>\n\n<!-- Footer -->\n<tr><td style=\"background:#f8faff;border-top:1px solid #e2e8f0;padding:18px 36px\">\n  <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n    <td style=\"font-size:12px;color:#94a3b8;line-height:1.6\">\n      DTC — Digital Tools Corner &nbsp;·&nbsp; \n      <a href=\"mailto:dtc@dtc1.shop\" style=\"color:#94a3b8;text-decoration:none\">dtc@dtc1.shop</a>\n    </td>\n    <td align=\"right\" style=\"font-size:11px;color:#cbd5e1\">Automated email</td>\n  </tr></table>\n</td></tr>\n\n</table>\n</td></tr></table>\n</body></html>", "lastModified": "2026-04-06T23:16:18.326494Z"}]}, null, 2));
 
 // ── Default products ───────────────────────────────────────────────────────────
@@ -132,6 +137,8 @@ app.use('/api/status',           _rl(60, 15));   // 60 per 15 min (polled)
 app.use('/api/chat/open',        _rl(10, 15));   // 10 per 15 min
 app.use('/api/chat/send',        _rl(30, 15));   // 30 per 15 min
 app.use('/api/chat/poll',        _rl(120, 15));  // 120 per 15 min (polled every 5s)
+app.use('/api/reseller-otp',     _rl(5,  15));   // 5 per 15 min (OTP sends)
+app.use('/api/reseller-dashboard', _rl(20, 15)); // 20 per 15 min
 
 // ── File helpers ───────────────────────────────────────────────────────────────
 const loadTokens      = () => JSON.parse(fs.readFileSync(TOKENS_FILE,  'utf8'));
@@ -155,6 +162,10 @@ const loadLanding     = () => JSON.parse(fs.readFileSync(LANDING_FILE,'utf8'));
 const saveLanding     = c  => fs.writeFileSync(LANDING_FILE, JSON.stringify(c, null, 2));
 const loadResellers   = () => { try { return JSON.parse(fs.readFileSync(RESELLERS_FILE,'utf8')); } catch { return []; } };
 const saveResellers   = r  => fs.writeFileSync(RESELLERS_FILE, JSON.stringify(r, null, 2));
+const loadOtps        = () => { try { return JSON.parse(fs.readFileSync(RESELLER_OTPS_FILE,'utf8')); } catch { return {}; } };
+const saveOtps        = o  => fs.writeFileSync(RESELLER_OTPS_FILE, JSON.stringify(o, null, 2));
+const loadPayouts     = () => { try { return JSON.parse(fs.readFileSync(PAYOUTS_FILE,'utf8')); } catch { return []; } };
+const savePayouts     = p  => fs.writeFileSync(PAYOUTS_FILE, JSON.stringify(p, null, 2));
 
 // ── Duration lookup — checks product packages first, falls back to label parsing ──
 function getDurationDays(productId, packageLabel) {
@@ -387,6 +398,24 @@ async function checkSubscriptionEmails() {
     if (t.approved && t.subscriptionExpiresAt && t.email) {
       const expiry   = new Date(t.subscriptionExpiresAt);
       const daysLeft = Math.ceil((expiry - now) / (1000*60*60*24));
+      // 30-day reminder
+      if (daysLeft === 30 && !t.reminder30Sent) {
+        const renewToken = uuidv4();
+        tokens[renewToken] = { customerName: t.customerName, productId: t.productId, productName: t.productName, packageType: t.packageType, price: t.price, currency: t.currency, currencySymbol: t.currencySymbol, resellerId: t.resellerId, resellerName: t.resellerName, customEmail: t.customEmail, product: t.product, credentialsMode: t.credentialsMode, loginDetails: t.loginDetails, accessLink: t.accessLink, instructionSetId: t.instructionSetId, postInstructionSetId: t.postInstructionSetId, createdAt: new Date().toISOString(), expiresAt: new Date(Date.now() + LINK_EXPIRY_MS).toISOString(), durationDays: t.durationDays, used: false, approved: false, declined: false, deactivated: false, renewalFor: token };
+        const renewLink = (process.env.BASE_URL || 'https://dtc1.shop') + '/submit?token=' + renewToken;
+        const expFmt = new Date(t.subscriptionExpiresAt).toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
+        const r = await sendEmail({ to: t.email, subject: 'Your ' + t.packageType + ' expires in 30 days — renew early', html: reminderTemplate({ customerName: t.customerName, packageType: t.packageType, expiryDate: expFmt, daysLeft: 30, renewLink }), type: 'reminder_30d', token });
+        if (r.ok) { tokens[token].reminder30Sent = true; changed = true; }
+      }
+      // 7-day reminder (customer)
+      if (daysLeft === 7 && !t.reminder7Sent) {
+        const renewToken = uuidv4();
+        tokens[renewToken] = { customerName: t.customerName, productId: t.productId, productName: t.productName, packageType: t.packageType, price: t.price, currency: t.currency, currencySymbol: t.currencySymbol, resellerId: t.resellerId, resellerName: t.resellerName, customEmail: t.customEmail, product: t.product, credentialsMode: t.credentialsMode, loginDetails: t.loginDetails, accessLink: t.accessLink, instructionSetId: t.instructionSetId, postInstructionSetId: t.postInstructionSetId, createdAt: new Date().toISOString(), expiresAt: new Date(Date.now() + LINK_EXPIRY_MS).toISOString(), durationDays: t.durationDays, used: false, approved: false, declined: false, deactivated: false, renewalFor: token };
+        const renewLink = (process.env.BASE_URL || 'https://dtc1.shop') + '/submit?token=' + renewToken;
+        const expFmt = new Date(t.subscriptionExpiresAt).toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
+        const r = await sendEmail({ to: t.email, subject: 'Your ' + t.packageType + ' expires in 7 days — renew now', html: reminderTemplate({ customerName: t.customerName, packageType: t.packageType, expiryDate: expFmt, daysLeft: 7, renewLink }), type: 'reminder_7d', token });
+        if (r.ok) { tokens[token].reminder7Sent = true; changed = true; }
+      }
       if (daysLeft === 5 && !t.reminder5Sent) {
         // Generate a fresh renewal link for the same product + package
         const renewToken = uuidv4();
@@ -415,9 +444,46 @@ async function checkSubscriptionEmails() {
         });
         if (r.ok) { tokens[token].reminder5Sent = true; changed = true; }
       }
+      // 3-day urgent customer reminder
+      if (daysLeft === 3 && !t.reminder3Sent) {
+        const renewToken = uuidv4();
+        tokens[renewToken] = { customerName: t.customerName, productId: t.productId, productName: t.productName, packageType: t.packageType, price: t.price, currency: t.currency, currencySymbol: t.currencySymbol, resellerId: t.resellerId, resellerName: t.resellerName, customEmail: t.customEmail, product: t.product, credentialsMode: t.credentialsMode, loginDetails: t.loginDetails, accessLink: t.accessLink, instructionSetId: t.instructionSetId, postInstructionSetId: t.postInstructionSetId, createdAt: new Date().toISOString(), expiresAt: new Date(Date.now() + LINK_EXPIRY_MS).toISOString(), durationDays: t.durationDays, used: false, approved: false, declined: false, deactivated: false, renewalFor: token };
+        const renewLink = (process.env.BASE_URL || 'https://dtc1.shop') + '/submit?token=' + renewToken;
+        const expFmt = expiry.toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
+        const r3 = await sendEmail({ to: t.email, subject: '🚨 Last chance — ' + t.packageType + ' expires in 3 days', html: reminderTemplate({ customerName: t.customerName, packageType: t.packageType, expiryDate: expFmt, daysLeft: 3, renewLink }), type: 'reminder_3d', token });
+        if (r3.ok) { tokens[token].reminder3Sent = true; changed = true; }
+      }
       if (daysLeft <= 0 && !t.expiredEmailSent) {
-        const r = await sendEmail({ to: t.email, subject: `Subscription expired — DTC`, html: expiredTemplate({ customerName: t.customerName, packageType: t.packageType }), type: 'expired', token });
-        if (r.ok) { tokens[token].expiredEmailSent = true; changed = true; }
+        const re = await sendEmail({ to: t.email, subject: 'Subscription expired — DTC', html: expiredTemplate({ customerName: t.customerName, packageType: t.packageType }), type: 'expired', token });
+        if (re.ok) { tokens[token].expiredEmailSent = true; changed = true; }
+      }
+
+      // ── Notify reseller when customer is expiring in 7 days ──────────────
+      if (daysLeft === 7 && !t.resellerNotified7d && t.resellerId) {
+        const registry = loadResellers();
+        const resellerEntry = registry.find(re => re.id && re.id.trim().toLowerCase() === t.resellerId.trim().toLowerCase());
+        const resellerEmail = resellerEntry && resellerEntry.email;
+        if (resellerEmail) {
+          const expiryStr = new Date(t.subscriptionExpiresAt).toLocaleDateString('en-GB', {day:'2-digit',month:'long',year:'numeric'});
+          const resellerHtml = '<div style="font-family:Helvetica Neue,Arial,sans-serif;max-width:520px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0">'
+            + '<div style="background:#d97706;padding:24px 32px"><div style="font-size:20px;font-weight:700;color:#fff">DTC Reseller Alert</div><div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:2px">Customer expiring soon</div></div>'
+            + '<div style="padding:28px 32px">'
+            + '<h2 style="margin:0 0 8px;color:#1e293b;font-size:1rem">Action needed — customer expiring in 7 days</h2>'
+            + '<p style="color:#64748b;line-height:1.7;margin:0 0 16px">Your customer <strong>' + t.customerName + '</strong> has a subscription expiring soon. Reach out to them to arrange renewal.</p>'
+            + '<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:16px 20px;margin-bottom:16px">'
+            + '<table width="100%" cellpadding="0" cellspacing="0">'
+            + '<tr><td style="font-size:12px;color:#92400e;padding:4px 0;font-weight:600;width:110px">Customer</td><td style="font-size:13px;color:#1e293b;font-weight:700">' + t.customerName + '</td></tr>'
+            + '<tr><td style="font-size:12px;color:#92400e;padding:4px 0;font-weight:600">Package</td><td style="font-size:13px;color:#1e293b">' + t.packageType + '</td></tr>'
+            + '<tr><td style="font-size:12px;color:#92400e;padding:4px 0;font-weight:600">Expires</td><td style="font-size:13px;color:#d97706;font-weight:700">' + expiryStr + '</td></tr>'
+            + (t.email ? '<tr><td style="font-size:12px;color:#92400e;padding:4px 0;font-weight:600">Email</td><td style="font-size:13px;color:#1e293b;font-family:monospace">' + t.email + '</td></tr>' : '')
+            + '</table></div>'
+            + '<p style="font-size:12px;color:#94a3b8;line-height:1.6">Contact the customer to arrange renewal. Log in to your reseller portal to view all expiring customers.</p>'
+            + '</div>'
+            + '<div style="padding:14px 32px;background:#f8faff;border-top:1px solid #e2e8f0;font-size:11px;color:#94a3b8">DTC · Reseller notification</div>'
+            + '</div>';
+          const rr = await sendEmail({ to: resellerEmail, subject: t.customerName + ' expires in 7 days — ' + t.packageType, html: resellerHtml, type: 'reseller_alert_7d', token });
+          if (rr.ok) { tokens[token].resellerNotified7d = true; changed = true; }
+        }
       }
 
       // ── Win-back: 30 days after expiry with no renewal ───────────────────
@@ -1356,29 +1422,92 @@ app.post('/api/customer-lookup', (req, res) => {
   });
 });
 
-// ── Reseller Portal API ────────────────────────────────────────────────────────
-// POST /api/reseller-dashboard — resellers enter their ID to view their sales
-app.post('/api/reseller-dashboard', (req, res) => {
-  const { resellerId } = req.body || {};
-  if (!resellerId) return res.status(400).json({ found: false, error: 'Reseller ID is required.' });
+// ── Reseller Auth — Step 1: verify ID + password, send OTP ───────────────────
+app.post('/api/reseller-otp', async (req, res) => {
+  const { resellerId, password } = req.body || {};
+  if (!resellerId || !password) return res.status(400).json({ ok: false, error: 'ID and password required.' });
 
-  const tokens = loadTokens();
-  const rid    = resellerId.trim();
+  const rid      = resellerId.trim().toLowerCase();
+  const registry = loadResellers();
+  const tokens   = loadTokens();
+  const entry    = registry.find(r => r.id && r.id.trim().toLowerCase() === rid);
+  const hasTokens = Object.values(tokens).some(t => t.resellerId && t.resellerId.trim().toLowerCase() === rid);
 
-  // Find all tokens tagged with this resellerId (any status)
-  const resellerTokens = Object.entries(tokens)
-    .filter(([, t]) => t.resellerId && t.resellerId.trim() === rid);
+  if (!entry && !hasTokens) return res.json({ ok: false, error: 'Invalid Reseller ID.' });
+  if (entry && entry.status === 'suspended') return res.json({ ok: false, error: 'Account suspended. Please contact DTC.' });
 
-  if (!resellerTokens.length) {
-    return res.json({ found: false, error: 'Invalid Reseller ID. Please contact DTC to confirm your ID.' });
+  const storedPw = entry && entry.password ? entry.password : null;
+  if (!storedPw) return res.json({ ok: false, error: 'No password set for this account. Ask admin to configure one.' });
+  if (storedPw !== password) return res.json({ ok: false, error: 'Incorrect password.' });
+
+  const email = entry && entry.email ? entry.email : null;
+  if (!email) return res.json({ ok: false, error: 'No email on file. Ask admin to add your email address.' });
+
+  const code = String(Math.floor(100000 + Math.random() * 900000));
+  const otps = loadOtps();
+  otps[rid]  = { code, expiresAt: new Date(Date.now() + OTP_EXPIRY_MS).toISOString(), attempts: 0 };
+  saveOtps(otps);
+
+  const name    = entry ? entry.name : rid;
+  const otpHtml = '<div style="font-family:Helvetica Neue,Arial,sans-serif;max-width:480px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0">'
+    + '<div style="background:#7c3aed;padding:24px 32px"><div style="font-size:20px;font-weight:700;color:#fff">DTC</div>'
+    + '<div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:2px">Reseller Portal</div></div>'
+    + '<div style="padding:32px">'
+    + '<h2 style="margin:0 0 8px;color:#1e293b;font-size:1.1rem">Your login code</h2>'
+    + '<p style="color:#64748b;line-height:1.7;margin:0 0 20px">Hi ' + name + ', use this one-time code to complete sign-in. It expires in 10 minutes.</p>'
+    + '<div style="background:#f5f3ff;border:2px solid #ddd6fe;border-radius:12px;padding:20px;text-align:center;margin-bottom:20px">'
+    + '<div style="font-size:36px;font-weight:800;letter-spacing:.3em;color:#7c3aed;font-family:monospace">' + code + '</div>'
+    + '<div style="font-size:12px;color:#64748b;margin-top:8px">Expires in 10 minutes · Do not share this code</div>'
+    + '</div>'
+    + '<p style="font-size:12px;color:#94a3b8;line-height:1.6">If you did not request this, ignore this email.</p>'
+    + '</div>'
+    + '<div style="padding:16px 32px;background:#f8faff;border-top:1px solid #e2e8f0;font-size:11px;color:#94a3b8">DTC · Automated notification</div>'
+    + '</div>';
+
+  const r = await sendEmail({ to: email, subject: 'Your DTC Reseller login code: ' + code, html: otpHtml, type: 'reseller_otp' });
+  if (!r.ok) return res.json({ ok: false, error: 'Failed to send OTP: ' + r.error });
+
+  const masked = email.replace(/^(.).*(@.*)$/, (_, a, b) => a + '***' + b);
+  res.json({ ok: true, maskedEmail: masked });
+});
+
+// ── Reseller Auth — Step 2: verify OTP → return full dashboard data ───────────
+app.post('/api/reseller-verify-otp', (req, res) => {
+  const { resellerId, code } = req.body || {};
+  if (!resellerId || !code) return res.status(400).json({ ok: false, error: 'Missing fields.' });
+
+  const rid  = resellerId.trim().toLowerCase();
+  const otps = loadOtps();
+  const otp  = otps[rid];
+
+  if (!otp) return res.json({ ok: false, error: 'No code found. Please request a new one.' });
+  if (new Date() > new Date(otp.expiresAt)) {
+    delete otps[rid]; saveOtps(otps);
+    return res.json({ ok: false, error: 'Code expired. Please go back and try again.' });
+  }
+  otp.attempts = (otp.attempts || 0) + 1;
+  if (otp.attempts > 5) {
+    delete otps[rid]; saveOtps(otps);
+    return res.json({ ok: false, error: 'Too many attempts. Please start over.' });
+  }
+  if (otp.code !== String(code).trim()) {
+    saveOtps(otps);
+    return res.json({ ok: false, error: 'Incorrect code. ' + (5 - otp.attempts) + ' attempt' + (5 - otp.attempts !== 1 ? 's' : '') + ' remaining.' });
   }
 
-  // Get the reseller name from the most recent token
-  const resellerName = resellerTokens
-    .map(([, t]) => t.resellerName)
-    .find(n => n) || rid;
+  // OTP verified — delete it and build dashboard payload
+  delete otps[rid]; saveOtps(otps);
 
-  // Build sales array (only show safe fields — no org IDs or session data)
+  const registry       = loadResellers();
+  const tokens         = loadTokens();
+  const entry          = registry.find(r => r.id && r.id.trim().toLowerCase() === rid);
+  const resellerTokens = Object.entries(tokens)
+    .filter(([, t]) => t.resellerId && t.resellerId.trim().toLowerCase() === rid);
+
+  const resellerName = (entry && entry.name)
+    || resellerTokens.map(([, t]) => t.resellerName).find(n => n)
+    || rid;
+
   const sales = resellerTokens
     .filter(([, t]) => t.approved)
     .map(([, t]) => ({
@@ -1395,15 +1524,345 @@ app.post('/api/reseller-dashboard', (req, res) => {
     }))
     .sort((a, b) => new Date(b.approvedAt || 0) - new Date(a.approvedAt || 0));
 
+  const commissionRate  = (entry && entry.commissionRate) || 0;
+  const totalRevenue    = sales.reduce((s, x) => s + (x.price || 0), 0);
+  const totalCommission = parseFloat((totalRevenue * commissionRate / 100).toFixed(2));
+  const allPayouts      = loadPayouts().filter(p => p.resellerId === rid);
+  const paidOut         = allPayouts.filter(p => p.status === 'paid').reduce((s, p) => s + p.amount, 0);
+  const pendingPayout   = Math.max(0, parseFloat((totalCommission - paidOut).toFixed(2)));
+  const currencySymbol  = (sales[0] && sales[0].currencySymbol) || '$';
+
   res.json({
-    found:        true,
-    resellerId:   rid,
+    ok: true, found: true,
+    resellerId:      rid,
     resellerName,
+    commissionRate,
+    totalRevenue:    parseFloat(totalRevenue.toFixed(2)),
+    totalCommission,
+    paidOut:         parseFloat(paidOut.toFixed(2)),
+    pendingPayout,
+    payouts:         allPayouts,
+    currencySymbol,
     sales,
   });
 });
 
-// ── Live Chat ──────────────────────────────────────────────────────────────────
+// ── Admin: set reseller password + email ─────────────────────────────────────
+app.post('/admin/resellers/set-credentials', (req, res) => {
+  const { adminKey, id, password, email } = req.body;
+  if (!isAdmin(adminKey)) return res.status(401).json({ error: 'Unauthorized' });
+  if (!id) return res.status(400).json({ error: 'ID required.' });
+  const registry = loadResellers();
+  const r = registry.find(r => r.id === id);
+  if (!r) return res.status(404).json({ error: 'Reseller not found.' });
+  if (password !== undefined) r.password = password.trim();
+  if (email    !== undefined) r.email    = email.trim();
+  r.updatedAt = new Date().toISOString();
+  saveResellers(registry);
+  res.json({ success: true });
+});
+
+// ── Payouts — admin CRUD ──────────────────────────────────────────────────────
+app.get('/admin/payouts', (req, res) => {
+  if (!isAdmin(req.query.adminKey)) return res.status(401).json({ error: 'Unauthorized' });
+  const payouts = loadPayouts();
+  const rid     = req.query.resellerId;
+  res.json({ payouts: rid ? payouts.filter(p => p.resellerId === rid) : payouts });
+});
+
+app.post('/admin/payouts/add', (req, res) => {
+  const { adminKey, resellerId, resellerName, amount, currency, note, period } = req.body;
+  if (!isAdmin(adminKey)) return res.status(401).json({ error: 'Unauthorized' });
+  if (!resellerId || !amount) return res.status(400).json({ error: 'resellerId and amount required.' });
+  const payouts = loadPayouts();
+  const payout  = {
+    id: uuidv4(), resellerId, resellerName: resellerName || resellerId,
+    amount: parseFloat(amount), currency: currency || 'USD',
+    note: note || '', period: period || '',
+    status: 'pending', createdAt: new Date().toISOString(), paidAt: null,
+  };
+  payouts.push(payout);
+  savePayouts(payouts);
+  res.json({ success: true, payout });
+});
+
+app.post('/admin/payouts/mark-paid', (req, res) => {
+  const { adminKey, id, paid } = req.body;
+  if (!isAdmin(adminKey)) return res.status(401).json({ error: 'Unauthorized' });
+  const payouts = loadPayouts();
+  const p = payouts.find(x => x.id === id);
+  if (!p) return res.status(404).json({ error: 'Payout not found.' });
+  p.status = paid ? 'paid' : 'pending';
+  p.paidAt  = paid ? new Date().toISOString() : null;
+  savePayouts(payouts);
+  res.json({ success: true, payout: p });
+});
+
+app.post('/admin/payouts/delete', (req, res) => {
+  const { adminKey, id } = req.body;
+  if (!isAdmin(adminKey)) return res.status(401).json({ error: 'Unauthorized' });
+  savePayouts(loadPayouts().filter(p => p.id !== id));
+  res.json({ success: true });
+});
+
+// ── Expiry notifications — admin POST trigger ─────────────────────────────────
+// POST /admin/send-expiry-notifications
+// Body: { adminKey, daysThreshold: 7, notifyReseller: true, notifyCustomer: true }
+app.post('/admin/send-expiry-notifications', async (req, res) => {
+  const { adminKey, daysThreshold = 7, notifyReseller = true, notifyCustomer = true } = req.body;
+  if (!isAdmin(adminKey)) return res.status(401).json({ error: 'Unauthorized' });
+
+  const tokens    = loadTokens();
+  const registry  = loadResellers();
+  const now       = new Date();
+  const threshold = parseInt(daysThreshold) || 7;
+  const fmtDate   = iso => new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+
+  const expiring = Object.entries(tokens).filter(([, t]) => {
+    if (!t.approved || !t.subscriptionExpiresAt || t.deactivated) return false;
+    const days = Math.ceil((new Date(t.subscriptionExpiresAt) - now) / 86400000);
+    return days > 0 && days <= threshold;
+  });
+
+  const results = { customersSent: 0, resellersSent: 0, errors: [] };
+  const byReseller = {};
+
+  for (const [, t] of expiring) {
+    const daysLeft = Math.ceil((new Date(t.subscriptionExpiresAt) - now) / 86400000);
+    const expiry   = fmtDate(t.subscriptionExpiresAt);
+
+    if (notifyCustomer && t.email) {
+      const html = reminderTemplate({ customerName: t.customerName, packageType: t.packageType, expiryDate: expiry, daysLeft });
+      const r = await sendEmail({
+        to: t.email,
+        subject: 'Your ' + t.packageType + ' expires in ' + daysLeft + ' day' + (daysLeft !== 1 ? 's' : '') + ' — DTC',
+        html, type: 'expiry_reminder',
+      });
+      if (r.ok) results.customersSent++;
+      else results.errors.push({ type: 'customer', email: t.email, error: r.error });
+    }
+
+    if (notifyReseller && t.resellerId) {
+      const rid = t.resellerId.trim().toLowerCase();
+      if (!byReseller[rid]) byReseller[rid] = [];
+      byReseller[rid].push({ customerName: t.customerName, packageType: t.packageType, expiry, daysLeft });
+    }
+  }
+
+  if (notifyReseller) {
+    for (const [rid, items] of Object.entries(byReseller)) {
+      const entry = registry.find(r => r.id && r.id.trim().toLowerCase() === rid);
+      const email = entry && entry.email;
+      if (!email) continue;
+      const name = entry.name || rid;
+      const rows = items.map(i =>
+        '<tr style="border-bottom:1px solid #e2e8f0">'
+        + '<td style="padding:8px 12px;font-size:13px;font-weight:600;color:#1e293b">' + i.customerName + '</td>'
+        + '<td style="padding:8px 12px;font-size:13px;color:#64748b">' + i.packageType + '</td>'
+        + '<td style="padding:8px 12px;font-size:13px;color:#d97706">' + i.expiry + '</td>'
+        + '<td style="padding:8px 12px;font-size:13px;font-weight:700;color:' + (i.daysLeft <= 3 ? '#dc2626' : '#d97706') + '">' + i.daysLeft + 'd</td>'
+        + '</tr>'
+      ).join('');
+      const html = '<div style="font-family:Helvetica Neue,Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0">'
+        + '<div style="background:#7c3aed;padding:24px 32px"><div style="font-size:20px;font-weight:700;color:#fff">DTC Reseller Alert</div>'
+        + '<div style="font-size:12px;color:rgba(255,255,255,.7);margin-top:2px">Subscription Expiry Digest</div></div>'
+        + '<div style="padding:28px 32px">'
+        + '<h2 style="margin:0 0 6px;font-size:1.05rem;color:#1e293b">Hi ' + name + ' — ' + items.length + ' subscription' + (items.length !== 1 ? 's' : '') + ' expiring within ' + threshold + ' days</h2>'
+        + '<p style="color:#64748b;font-size:14px;line-height:1.7;margin:0 0 20px">Follow up with these customers now to help them renew before they lose access.</p>'
+        + '<table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;border-collapse:collapse">'
+        + '<thead><tr style="background:#f8fafc">'
+        + '<th style="padding:8px 12px;font-size:11px;text-align:left;color:#64748b;text-transform:uppercase;letter-spacing:.06em">Customer</th>'
+        + '<th style="padding:8px 12px;font-size:11px;text-align:left;color:#64748b;text-transform:uppercase;letter-spacing:.06em">Package</th>'
+        + '<th style="padding:8px 12px;font-size:11px;text-align:left;color:#64748b;text-transform:uppercase;letter-spacing:.06em">Expires</th>'
+        + '<th style="padding:8px 12px;font-size:11px;text-align:left;color:#64748b;text-transform:uppercase;letter-spacing:.06em">Days</th>'
+        + '</tr></thead><tbody>' + rows + '</tbody></table>'
+        + '<p style="font-size:13px;color:#94a3b8;margin-top:20px;line-height:1.6">Log in to your <a href="/reseller" style="color:#7c3aed;text-decoration:none">Reseller Portal</a> for your full dashboard.</p>'
+        + '</div>'
+        + '<div style="padding:16px 32px;background:#f8faff;border-top:1px solid #e2e8f0;font-size:11px;color:#94a3b8">DTC · Automated notification</div>'
+        + '</div>';
+      const r = await sendEmail({
+        to: email,
+        subject: '[DTC Reseller] ' + items.length + ' customer' + (items.length !== 1 ? 's' : '') + ' expiring within ' + threshold + ' days',
+        html, type: 'reseller_expiry_digest',
+      });
+      if (r.ok) results.resellersSent++;
+      else results.errors.push({ type: 'reseller', email, error: r.error });
+    }
+  }
+
+  res.json({ success: true, expiringSoon: expiring.length, ...results });
+});
+
+// ── CSV Exports ───────────────────────────────────────────────────────────────
+// GET /admin/export/reseller-sales?adminKey=&resellerId=   (optional resellerId filter)
+// GET /admin/export/all-customers?adminKey=
+function tokensToCSV(rows) {
+  const esc = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+  const headers = ['Customer Name','Email','Package','Product','Price','Currency','Approved At','Expires At','Days Left','Reseller ID','Reseller Name','Status'];
+  const now = new Date();
+  const lines = [headers.join(',')];
+  for (const t of rows) {
+    const daysLeft = t.subscriptionExpiresAt ? Math.ceil((new Date(t.subscriptionExpiresAt) - now) / 86400000) : '';
+    const status   = t.deactivated ? 'Deactivated' : !t.approved ? (t.declined ? 'Declined' : t.used ? 'Processing' : 'Pending') : daysLeft <= 0 ? 'Expired' : daysLeft <= 30 ? 'Expiring' : 'Active';
+    lines.push([
+      esc(t.customerName), esc(t.email), esc(t.packageType), esc(t.productName || t.product),
+      esc(t.price || ''), esc(t.currencySymbol || '$'),
+      esc(t.approvedAt ? new Date(t.approvedAt).toLocaleDateString('en-GB') : ''),
+      esc(t.subscriptionExpiresAt ? new Date(t.subscriptionExpiresAt).toLocaleDateString('en-GB') : ''),
+      esc(daysLeft), esc(t.resellerId || ''), esc(t.resellerName || ''), esc(status),
+    ].join(','));
+  }
+  return lines.join('\r\n');
+}
+
+app.get('/admin/export/reseller-sales', (req, res) => {
+  if (!isAdmin(req.query.adminKey)) return res.status(401).json({ error: 'Unauthorized' });
+  const tokens = loadTokens();
+  const rid    = req.query.resellerId;
+  const rows   = Object.values(tokens).filter(t => t.approved && (rid ? (t.resellerId || '').toLowerCase() === rid.toLowerCase() : !!t.resellerId));
+  const fname  = rid ? 'reseller-sales-' + rid + '.csv' : 'all-reseller-sales.csv';
+  res.setHeader('Content-Type', 'text/csv');
+  res.setHeader('Content-Disposition', 'attachment; filename="' + fname + '"');
+  res.send(tokensToCSV(rows));
+});
+
+app.get('/admin/export/all-customers', (req, res) => {
+  if (!isAdmin(req.query.adminKey)) return res.status(401).json({ error: 'Unauthorized' });
+  const tokens = loadTokens();
+  const rows   = Object.values(tokens).filter(t => t.used || t.approved);
+  res.setHeader('Content-Type', 'text/csv');
+  res.setHeader('Content-Disposition', 'attachment; filename="all-customers.csv"');
+  res.send(tokensToCSV(rows));
+});
+
+// GET /api/reseller-export — reseller downloads their own sales CSV (auth via resellerId param)
+// Uses a signed token approach: reseller must have just logged in (OTP verified session stored in memory)
+const _resellerSessions = new Map(); // rid → expiry timestamp (in-memory, cleared on restart)
+app.post('/api/reseller-session', (req, res) => {
+  // Called by reseller portal after OTP verify to create a short-lived download session
+  const { resellerId, sessionToken } = req.body || {};
+  if (!resellerId || !sessionToken) return res.status(400).json({ ok: false });
+  _resellerSessions.set(resellerId.toLowerCase() + ':' + sessionToken, Date.now() + 15 * 60 * 1000);
+  res.json({ ok: true });
+});
+app.get('/api/reseller-export', (req, res) => {
+  const rid = (req.query.resellerId || '').toLowerCase();
+  const tok = req.query.sessionToken || '';
+  const key = rid + ':' + tok;
+  const exp = _resellerSessions.get(key);
+  if (!exp || Date.now() > exp) return res.status(401).send('Session expired. Please log in again.');
+  const tokens = loadTokens();
+  const rows   = Object.values(tokens).filter(t => t.approved && t.resellerId && t.resellerId.toLowerCase() === rid);
+  res.setHeader('Content-Type', 'text/csv');
+  res.setHeader('Content-Disposition', 'attachment; filename="my-sales-' + rid + '.csv"');
+  res.send(tokensToCSV(rows));
+});
+
+// ── Bulk approve / reject ─────────────────────────────────────────────────────
+app.post('/admin/bulk-approve', async (req, res) => {
+  const { adminKey, tokens: tokenList } = req.body;
+  if (!isAdmin(adminKey)) return res.status(401).json({ error: 'Unauthorized' });
+  if (!Array.isArray(tokenList) || !tokenList.length) return res.status(400).json({ error: 'No tokens provided.' });
+
+  const tokens = loadTokens();
+  const results = { approved: 0, skipped: 0, errors: [] };
+
+  for (const token of tokenList) {
+    if (!tokens[token]) { results.skipped++; continue; }
+    if (tokens[token].approved) { results.skipped++; continue; }
+    const t = tokens[token];
+    const days = getDurationDays(t.productId, t.packageType);
+    t.approved = true; t.declined = false;
+    t.approvedAt = new Date().toISOString();
+    t.subscriptionExpiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+    t.subscriptionDays = days;
+    results.approved++;
+    // Send activation emails
+    const receiptTo = t.customEmail || t.email;
+    if (receiptTo) {
+      try { await sendEmail({ to: receiptTo, subject: 'Your ' + (t.packageType || 'subscription') + ' is now active — DTC Receipt', html: receiptTemplate(t), type: 'receipt', token }); } catch {}
+      try {
+        const settings = loadSettings(); const tmplId = settings.activationEmailTemplateId;
+        if (tmplId) { const tmplData = loadTemplates(); const tmpl = tmplData.templates.find(x => x.id === tmplId); if (tmpl && t.email) { await sendEmail({ to: t.email, subject: applyTemplateVars(tmpl.subject, t), html: applyTemplateVars(tmpl.body, t), type: 'activation', token }); } }
+      } catch {}
+    }
+  }
+  saveTokens(tokens);
+  res.json({ success: true, ...results });
+});
+
+app.post('/admin/bulk-decline', (req, res) => {
+  const { adminKey, tokens: tokenList, reason } = req.body;
+  if (!isAdmin(adminKey)) return res.status(401).json({ error: 'Unauthorized' });
+  if (!Array.isArray(tokenList) || !tokenList.length) return res.status(400).json({ error: 'No tokens provided.' });
+  const tokens = loadTokens();
+  let declined = 0;
+  for (const token of tokenList) {
+    if (!tokens[token] || tokens[token].approved) continue;
+    tokens[token].declined = true; tokens[token].approved = false;
+    tokens[token].declinedAt = new Date().toISOString();
+    tokens[token].declineReason = reason || 'The details provided could not be verified.';
+    declined++;
+  }
+  saveTokens(tokens);
+  res.json({ success: true, declined });
+});
+
+// ── Renewal request — customer portal self-service ────────────────────────────
+// POST /api/renewal-request
+// Customer submits their email; server generates a fresh renewal token and emails it to them.
+app.post('/api/renewal-request', async (req, res) => {
+  const { email } = req.body || {};
+  if (!email) return res.status(400).json({ ok: false, error: 'Email required.' });
+
+  const tokens = loadTokens();
+  const norm   = email.trim().toLowerCase();
+
+  // Find most recent approved, non-deactivated subscription for this email
+  const match = Object.entries(tokens)
+    .filter(([, t]) => t.approved && !t.deactivated && t.email && t.email.trim().toLowerCase() === norm)
+    .sort((a, b) => new Date(b[1].subscriptionExpiresAt || 0) - new Date(a[1].subscriptionExpiresAt || 0))[0];
+
+  if (!match) return res.json({ ok: false, error: 'No active subscription found for this email.' });
+
+  const [origToken, t] = match;
+
+  // Don't create duplicate renewal tokens if one was recently generated (< 24h)
+  const recentRenewal = Object.entries(tokens).find(([, rt]) =>
+    rt.renewalFor === origToken && !rt.used && !rt.approved && !rt.deactivated &&
+    new Date(rt.createdAt) > new Date(Date.now() - 24 * 60 * 60 * 1000)
+  );
+
+  let renewLink;
+  if (recentRenewal) {
+    renewLink = (process.env.BASE_URL || 'https://dtc1.shop') + '/submit?token=' + recentRenewal[0];
+  } else {
+    const renewToken = uuidv4();
+    tokens[renewToken] = {
+      customerName: t.customerName, productId: t.productId, productName: t.productName,
+      packageType: t.packageType, price: t.price, currency: t.currency, currencySymbol: t.currencySymbol,
+      resellerId: t.resellerId, resellerName: t.resellerName, customEmail: t.customEmail,
+      product: t.product, credentialsMode: t.credentialsMode, loginDetails: t.loginDetails,
+      accessLink: t.accessLink, instructionSetId: t.instructionSetId,
+      postInstructionSetId: t.postInstructionSetId,
+      createdAt: new Date().toISOString(), expiresAt: new Date(Date.now() + LINK_EXPIRY_MS).toISOString(),
+      durationDays: t.durationDays, used: false, approved: false, declined: false, deactivated: false,
+      renewalFor: origToken,
+    };
+    saveTokens(tokens);
+    renewLink = (process.env.BASE_URL || 'https://dtc1.shop') + '/submit?token=' + renewToken;
+  }
+
+  const expiry  = t.subscriptionExpiresAt ? new Date(t.subscriptionExpiresAt).toLocaleDateString('en-GB', { day:'2-digit', month:'long', year:'numeric' }) : 'soon';
+  const daysLeft = t.subscriptionExpiresAt ? Math.ceil((new Date(t.subscriptionExpiresAt) - new Date()) / 86400000) : 0;
+  const html = reminderTemplate({ customerName: t.customerName, packageType: t.packageType, expiryDate: expiry, daysLeft: Math.max(daysLeft, 0), renewLink });
+  const r = await sendEmail({ to: t.email, subject: 'Your renewal link for ' + t.packageType + ' — DTC', html, type: 'renewal_request' });
+
+  if (!r.ok) return res.json({ ok: false, error: 'Could not send email: ' + r.error });
+  res.json({ ok: true, message: 'Renewal link sent to your email address.' });
+});
+
+
 // Storage: chats.json  { [chatId]: { id, customerName, email, packageType, status, createdAt, updatedAt, unreadAdmin, messages: [{id,role,text,sentAt}] } }
 const loadChats  = () => { try { return JSON.parse(fs.readFileSync(CHAT_FILE,'utf8')); } catch { return {}; } };
 const saveChats  = (d) => fs.writeFileSync(CHAT_FILE, JSON.stringify(d, null, 2));
