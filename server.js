@@ -3,11 +3,13 @@ const { v4: uuidv4 } = require('uuid');
 const fs         = require('fs');
 const path       = require('path');
 const nodemailer = require('nodemailer');
+const rateLimit  = require('express-rate-limit');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
 const ADMIN_KEY         = process.env.ADMIN_KEY || 'dtc2024';
 const DATA_DIR          = path.join(__dirname, 'data');
+const BACKUP_DIR        = path.join(__dirname, 'backups');
 const TOKENS_FILE       = path.join(DATA_DIR, 'tokens.json');
 const SESSIONS_FILE     = path.join(DATA_DIR, 'sessions.txt');
 const EMAIL_CONFIG      = path.join(DATA_DIR, 'emailConfig.json');
@@ -24,6 +26,7 @@ const RESELLERS_FILE    = path.join(DATA_DIR, 'resellers.json');
 const LINK_EXPIRY_MS = 6 * 30 * 24 * 60 * 60 * 1000;
 
 if (!fs.existsSync(DATA_DIR))       fs.mkdirSync(DATA_DIR);
+if (!fs.existsSync(BACKUP_DIR))     fs.mkdirSync(BACKUP_DIR);
 if (!fs.existsSync(TOKENS_FILE))    fs.writeFileSync(TOKENS_FILE,  JSON.stringify({}));
 if (!fs.existsSync(SESSIONS_FILE))  fs.writeFileSync(SESSIONS_FILE, '');
 if (!fs.existsSync(EMAIL_CONFIG))   fs.writeFileSync(EMAIL_CONFIG,  JSON.stringify({}));
@@ -112,6 +115,23 @@ if (!fs.existsSync(INSTRUCTIONS_FILE)) {
 
 app.use(express.json({ limit: '2mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
+
+// ── Rate limiting — protect public-facing endpoints ────────────────────────
+const _rl = (max, windowMin) => rateLimit({
+  windowMs: windowMin * 60 * 1000,
+  max,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests — please slow down and try again in a few minutes.' },
+});
+// Customer-facing endpoints: strict (prevents enumeration & spam)
+app.use('/api/validate-token',   _rl(30, 15));   // 30 per 15 min
+app.use('/api/submit',           _rl(10, 15));   // 10 per 15 min
+app.use('/api/customer-lookup',  _rl(10, 15));   // 10 per 15 min
+app.use('/api/status',           _rl(60, 15));   // 60 per 15 min (polled)
+app.use('/api/chat/open',        _rl(10, 15));   // 10 per 15 min
+app.use('/api/chat/send',        _rl(30, 15));   // 30 per 15 min
+app.use('/api/chat/poll',        _rl(120, 15));  // 120 per 15 min (polled every 5s)
 
 // ── File helpers ───────────────────────────────────────────────────────────────
 const loadTokens      = () => JSON.parse(fs.readFileSync(TOKENS_FILE,  'utf8'));
@@ -237,7 +257,16 @@ async function sendEmail({ to, subject, html, type, token }) {
   }
 }
 const baseEmail = body => `<div style="font-family:'Helvetica Neue',Arial,sans-serif;max-width:560px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0"><div style="background:#2563eb;padding:24px 32px"><div style="font-size:20px;font-weight:700;color:#fff">DTC</div><div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:2px">Digital Tools Corner</div></div><div style="padding:32px">${body}</div><div style="padding:20px 32px;background:#f8faff;border-top:1px solid #e2e8f0;font-size:11px;color:#94a3b8">DTC · Automated notification.</div></div>`;
-const reminderTemplate = ({ customerName, packageType, expiryDate, daysLeft }) => baseEmail(`<h2 style="color:#1e293b;margin:0 0 16px">Your subscription expires in ${daysLeft} day${daysLeft!==1?'s':''}</h2><p style="color:#64748b">Hi ${customerName}, your <strong>${packageType}</strong> subscription expires soon. Contact us on WeChat to renew.</p><div style="background:#f8faff;border:1px solid #e2e8f0;border-radius:8px;padding:16px 20px;margin-top:16px"><div style="font-size:13px;color:#64748b">Expiry: <strong style="color:#d97706">${expiryDate}</strong> · ${daysLeft} days left</div></div>`);
+const reminderTemplate = ({ customerName, packageType, expiryDate, daysLeft, renewLink }) => baseEmail(
+  '<h2 style="color:#1e293b;margin:0 0 12px;font-size:1.05rem">Your subscription expires in ' + daysLeft + ' day' + (daysLeft !== 1 ? 's' : '') + '</h2>' +
+  '<p style="color:#64748b;line-height:1.7;margin:0 0 16px">Hi ' + customerName + ', your <strong>' + packageType + '</strong> expires on <strong style="color:#d97706">' + expiryDate + '</strong>.</p>' +
+  (renewLink
+    ? '<div style="text-align:center;margin:20px 0"><a href="' + renewLink + '" style="background:#2563eb;color:#fff;text-decoration:none;border-radius:9px;padding:13px 32px;font-weight:600;font-size:.9rem;display:inline-block">Renew My Subscription →</a></div>' +
+      '<p style="font-size:.73rem;color:#94a3b8;text-align:center;margin:0 0 16px">Click the button above to complete your renewal — takes 2 minutes.</p>'
+    : '<p style="color:#64748b;margin:0 0 16px">Contact us on WeChat to renew.</p>') +
+  '<div style="background:#f8faff;border:1px solid #e2e8f0;border-radius:8px;padding:14px 18px">' +
+  '<div style="font-size:.78rem;color:#64748b">Expires: <strong style="color:#d97706">' + expiryDate + '</strong> · ' + daysLeft + ' days left</div></div>'
+);
 const expiredTemplate  = ({ customerName, packageType }) => baseEmail(`<h2 style="color:#1e293b;margin:0 0 16px">Your subscription has ended</h2><p style="color:#64748b">Hi ${customerName}, your <strong>${packageType}</strong> has expired. Contact us on WeChat or at <a href="mailto:dtc@dtc1.shop">dtc@dtc1.shop</a> to renew.</p>`);
 
 // ── Activation receipt template ────────────────────────────────────────────────
@@ -352,17 +381,165 @@ function receiptTemplate(t) {
 async function checkSubscriptionEmails() {
   const cfg = loadEmailCfg(); if (!cfg.host || !cfg.user || !cfg.pass) return;
   const tokens = loadTokens(); const now = new Date(); let changed = false;
+
   for (const [token, t] of Object.entries(tokens)) {
-    if (!t.approved || !t.subscriptionExpiresAt || !t.email) continue;
-    const expiry = new Date(t.subscriptionExpiresAt);
-    const daysLeft = Math.ceil((expiry - now) / (1000*60*60*24));
-    if (daysLeft === 5 && !t.reminder5Sent) { const r = await sendEmail({ to: t.email, subject: `Subscription expires in 5 days — DTC`, html: reminderTemplate({ customerName: t.customerName, packageType: t.packageType, expiryDate: expiry.toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'}), daysLeft: 5 }), type: 'reminder_5d', token }); if (r.ok) { tokens[token].reminder5Sent = true; changed = true; } }
-    if (daysLeft <= 0 && !t.expiredEmailSent) { const r = await sendEmail({ to: t.email, subject: `Subscription expired — DTC`, html: expiredTemplate({ customerName: t.customerName, packageType: t.packageType }), type: 'expired', token }); if (r.ok) { tokens[token].expiredEmailSent = true; changed = true; } }
+    // ── Subscription reminders (existing) ──────────────────────────────────
+    if (t.approved && t.subscriptionExpiresAt && t.email) {
+      const expiry   = new Date(t.subscriptionExpiresAt);
+      const daysLeft = Math.ceil((expiry - now) / (1000*60*60*24));
+      if (daysLeft === 5 && !t.reminder5Sent) {
+        // Generate a fresh renewal link for the same product + package
+        const renewToken = uuidv4();
+        const renewExpiry = new Date(Date.now() + LINK_EXPIRY_MS).toISOString();
+        tokens[renewToken] = {
+          customerName: t.customerName, productId: t.productId, productName: t.productName,
+          packageType: t.packageType, price: t.price, currency: t.currency,
+          currencySymbol: t.currencySymbol, resellerId: t.resellerId, resellerName: t.resellerName,
+          customEmail: t.customEmail, product: t.product, credentialsMode: t.credentialsMode,
+          loginDetails: t.loginDetails, accessLink: t.accessLink,
+          instructionSetId: t.instructionSetId, postInstructionSetId: t.postInstructionSetId,
+          createdAt: new Date().toISOString(), expiresAt: renewExpiry, durationDays: t.durationDays,
+          used: false, approved: false, declined: false, deactivated: false,
+          renewalFor: token,  // link back to the original token
+        };
+        const renewLink = (process.env.BASE_URL || 'https://dtc1.shop') + '/submit?token=' + renewToken;
+        const r = await sendEmail({
+          to: t.email,
+          subject: 'Your ' + t.packageType + ' expires in 5 days — renew now',
+          html: reminderTemplate({
+            customerName: t.customerName, packageType: t.packageType,
+            expiryDate: expiry.toLocaleDateString('en-GB', {day:'2-digit',month:'long',year:'numeric'}),
+            daysLeft: 5, renewLink,
+          }),
+          type: 'reminder_5d', token
+        });
+        if (r.ok) { tokens[token].reminder5Sent = true; changed = true; }
+      }
+      if (daysLeft <= 0 && !t.expiredEmailSent) {
+        const r = await sendEmail({ to: t.email, subject: `Subscription expired — DTC`, html: expiredTemplate({ customerName: t.customerName, packageType: t.packageType }), type: 'expired', token });
+        if (r.ok) { tokens[token].expiredEmailSent = true; changed = true; }
+      }
+
+      // ── Win-back: 30 days after expiry with no renewal ───────────────────
+      if (daysLeft <= -30 && !t.winBackSent && t.email) {
+        const r = await sendEmail({
+          to: t.email,
+          subject: `We miss you, ${t.customerName} — come back to DTC`,
+          html: baseEmail(`
+            <h2 style="color:#1e293b;margin:0 0 12px;font-size:1.1rem">We miss you, ${t.customerName} 💙</h2>
+            <p style="color:#64748b;line-height:1.7;margin:0 0 16px">Your <strong>${t.packageType}</strong> subscription ended 30 days ago. As a returning customer, you qualify for our special re-activation rate.</p>
+            <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:14px 18px;margin-bottom:16px">
+              <div style="font-size:.78rem;font-weight:700;color:#1d4ed8;margin-bottom:6px">💙 Returning customer offer</div>
+              <div style="font-size:.75rem;color:#475569;line-height:1.6">Contact us on WeChat or reply to this email to claim your special returning-customer rate. We'll get you set up right away.</div>
+            </div>
+            <p style="font-size:.75rem;color:#94a3b8;line-height:1.6">Questions? <a href="mailto:dtc@dtc1.shop" style="color:#2563eb">dtc@dtc1.shop</a> or WhatsApp +86 197 3812 2807</p>`),
+          type: 'winback', token
+        });
+        if (r.ok) { tokens[token].winBackSent = true; changed = true; }
+      }
+    }
+
+    // ── Stale link follow-up: opened 48h+ ago, not submitted ─────────────
+    if (t.firstAccessedAt && !t.used && !t.deactivated && !t.staleFollowupSent) {
+      const hrsOpen = (now - new Date(t.firstAccessedAt)) / 3600000;
+      const emailTo = t.email || null; // email not yet submitted, check token
+      if (hrsOpen >= 48 && emailTo) {
+        const linkUrl = `${process.env.BASE_URL || 'https://dtc1.shop'}/submit?token=${token}`;
+        const r = await sendEmail({
+          to: emailTo,
+          subject: `Still need help activating your ${t.packageType}? — DTC`,
+          html: baseEmail(`
+            <h2 style="color:#1e293b;margin:0 0 12px;font-size:1.1rem">Still need help, ${t.customerName}? 👋</h2>
+            <p style="color:#64748b;line-height:1.7;margin:0 0 16px">You opened your ${t.packageType} activation link 2 days ago but haven't completed it yet. Your link is still valid — it only takes 2 minutes.</p>
+            <div style="text-align:center;margin:20px 0">
+              <a href="${linkUrl}" style="background:#2563eb;color:#fff;text-decoration:none;border-radius:9px;padding:12px 28px;font-weight:600;font-size:.88rem;display:inline-block">Complete My Activation →</a>
+            </div>
+            <p style="font-size:.75rem;color:#94a3b8;line-height:1.6">Need help? Reply to this email or contact us on WeChat — we're happy to walk you through it.</p>`),
+          type: 'stale_followup', token
+        });
+        if (r.ok) { tokens[token].staleFollowupSent = true; changed = true; }
+      }
+    }
   }
+
   if (changed) saveTokens(tokens);
 }
 setInterval(checkSubscriptionEmails, 60*60*1000);
 setTimeout(checkSubscriptionEmails, 30000);
+
+// ── Daily backup — runs at 02:00 server time, keeps last 30 ───────────────
+function runBackup() {
+  try {
+    const stamp   = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    const outFile = path.join(BACKUP_DIR, 'dtc-backup-' + stamp + '.tar');
+    // Write a JSON bundle of all data files
+    const bundle  = {};
+    const dataFiles = fs.readdirSync(DATA_DIR).filter(f => f.endsWith('.json') || f.endsWith('.txt'));
+    for (const f of dataFiles) {
+      try { bundle[f] = fs.readFileSync(path.join(DATA_DIR, f), 'utf8'); } catch {}
+    }
+    fs.writeFileSync(outFile, JSON.stringify({ createdAt: new Date().toISOString(), files: bundle }, null, 2));
+    // Keep only last 30 backups
+    const backups = fs.readdirSync(BACKUP_DIR)
+      .filter(f => f.startsWith('dtc-backup-'))
+      .sort()
+      .reverse();
+    backups.slice(30).forEach(f => { try { fs.unlinkSync(path.join(BACKUP_DIR, f)); } catch {} });
+    console.log('[Backup] Saved ' + path.basename(outFile) + ' (' + dataFiles.length + ' files)');
+  } catch(e) { console.error('[Backup] Failed:', e.message); }
+}
+
+// Schedule backup at 02:00 each day
+function scheduleDailyBackup() {
+  const now  = new Date();
+  const next = new Date(now);
+  next.setHours(2, 0, 0, 0);
+  if (next <= now) next.setDate(next.getDate() + 1);
+  const msUntil = next - now;
+  setTimeout(() => { runBackup(); setInterval(runBackup, 24*60*60*1000); }, msUntil);
+  console.log('[Backup] Next backup in ' + Math.round(msUntil / 60000) + ' min');
+}
+scheduleDailyBackup();
+
+// ── Backup API — list and restore ─────────────────────────────────────────
+app.get('/admin/backups', (req, res) => {
+  if (!isAdmin(req.query.adminKey)) return res.status(401).json({ error: 'Unauthorized' });
+  try {
+    const files = fs.readdirSync(BACKUP_DIR)
+      .filter(f => f.startsWith('dtc-backup-'))
+      .sort().reverse()
+      .map(f => {
+        const stat = fs.statSync(path.join(BACKUP_DIR, f));
+        return { name: f, size: stat.size, createdAt: stat.mtime.toISOString() };
+      });
+    res.json({ backups: files });
+  } catch { res.json({ backups: [] }); }
+});
+
+app.post('/admin/backups/run-now', (req, res) => {
+  if (!isAdmin(req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' });
+  runBackup();
+  res.json({ success: true, message: 'Backup created.' });
+});
+
+app.post('/admin/backups/restore', (req, res) => {
+  const { adminKey, filename } = req.body;
+  if (!isAdmin(adminKey)) return res.status(401).json({ error: 'Unauthorized' });
+  if (!filename || !filename.startsWith('dtc-backup-')) return res.status(400).json({ error: 'Invalid backup file.' });
+  const backupPath = path.join(BACKUP_DIR, filename);
+  if (!fs.existsSync(backupPath)) return res.status(404).json({ error: 'Backup not found.' });
+  try {
+    const bundle = JSON.parse(fs.readFileSync(backupPath, 'utf8'));
+    const files  = bundle.files || {};
+    // Back up current state before restoring
+    runBackup();
+    // Restore each file
+    for (const [name, content] of Object.entries(files)) {
+      fs.writeFileSync(path.join(DATA_DIR, name), content);
+    }
+    res.json({ success: true, restored: Object.keys(files).length + ' files' });
+  } catch(e) { res.status(500).json({ error: 'Restore failed: ' + e.message }); }
+});
 
 // ── Helper: get instruction sets for a token ───────────────────────────────────
 function getInstrSets(t) {
@@ -409,7 +586,7 @@ app.get('/admin/revenue', (req, res) => {
 
 // ── Generate link ──────────────────────────────────────────────────────────────
 app.post('/admin/generate', (req, res) => {
-  const { adminKey, customerName, productId, packageLabel, price, instructionSetId, postInstructionSetId, resellerId, resellerName } = req.body;
+  const { adminKey, customerName, productId, packageLabel, price, instructionSetId, postInstructionSetId, resellerId, resellerName, customEmail } = req.body;
   if (!isAdmin(adminKey)) return res.status(401).json({ error: 'Unauthorized' });
   if (!customerName)  return res.status(400).json({ error: 'Customer name is required.' });
   if (!productId)     return res.status(400).json({ error: 'Product is required.' });
@@ -439,6 +616,7 @@ app.post('/admin/generate', (req, res) => {
     currencySymbol:   loadSettings().currencySymbol || '$',
     resellerId:       resellerId   || null,
     resellerName:     resellerName || null,
+    customEmail:      customEmail  || null,
     product:          product.type,           // kept for backward-compat
     credentialsMode:  product.credentialsMode || false,
     loginDetails:     product.loginDetails    || '',
@@ -466,6 +644,141 @@ app.post('/admin/reactivate', (req, res) => {
   tokens[token].deactivated = false; delete tokens[token].deactivatedAt; saveTokens(tokens); res.json({ success: true });
 });
 
+// ── Update token fields ─────────────────────────────────────────────────────
+// Allows admin to edit: customerName, email, wechat, packageType, price, notes, customEmail
+app.post('/admin/token/update', (req, res) => {
+  const { adminKey, token, fields } = req.body;
+  if (!isAdmin(adminKey)) return res.status(401).json({ error: 'Unauthorized' });
+  const tokens = loadTokens();
+  if (!tokens[token]) return res.status(404).json({ error: 'Not found.' });
+  const allowed = ['customerName','email','wechat','packageType','price','notes','customEmail'];
+  allowed.forEach(k => { if (fields[k] !== undefined) tokens[token][k] = fields[k]; });
+  tokens[token].updatedAt = new Date().toISOString();
+  saveTokens(tokens);
+  res.json({ success: true });
+});
+
+// ── Delete token permanently ───────────────────────────────────────────────
+app.post('/admin/token/delete', (req, res) => {
+  const { adminKey, token } = req.body;
+  if (!isAdmin(adminKey)) return res.status(401).json({ error: 'Unauthorized' });
+  const tokens = loadTokens();
+  if (!tokens[token]) return res.status(404).json({ error: 'Not found.' });
+  delete tokens[token];
+  saveTokens(tokens);
+  res.json({ success: true });
+});
+
+// ── Import existing customer (pre-activated, custom dates) ─────────────────
+// Use this to add customers who activated outside the system or before DTC,
+// or where you want to record a specific subscription start/end date.
+app.post('/admin/import-customer', (req, res) => {
+  const {
+    adminKey, customerName, productId, packageLabel, price,
+    email, wechat, orgId, sessionData, notes,
+    activatedAt, subscriptionExpiresAt,   // custom dates — required
+    resellerId, resellerName, customEmail,
+    customPortalLink,                      // optional: portal/login URL shown to customer
+  } = req.body;
+
+  if (!isAdmin(adminKey))         return res.status(401).json({ error: 'Unauthorized' });
+  if (!customerName)              return res.status(400).json({ error: 'Customer name is required.' });
+  if (!productId)                 return res.status(400).json({ error: 'Product is required.' });
+  if (!packageLabel)              return res.status(400).json({ error: 'Package is required.' });
+  if (!email)                     return res.status(400).json({ error: 'Email is required.' });
+  if (!activatedAt)               return res.status(400).json({ error: 'Activation date is required.' });
+  if (!subscriptionExpiresAt)     return res.status(400).json({ error: 'Subscription expiry date is required.' });
+
+  const activatedDate = new Date(activatedAt);
+  const expiryDate    = new Date(subscriptionExpiresAt);
+
+  if (isNaN(activatedDate))       return res.status(400).json({ error: 'Invalid activation date.' });
+  if (isNaN(expiryDate))          return res.status(400).json({ error: 'Invalid expiry date.' });
+  if (expiryDate <= activatedDate) return res.status(400).json({ error: 'Expiry date must be after activation date.' });
+
+  const { products } = loadProducts();
+  const product = products.find(p => p.id === productId);
+  if (!product) return res.status(400).json({ error: 'Product not found.' });
+
+  const settings = loadSettings();
+  const token    = uuidv4();
+  const tokens   = loadTokens();
+
+  // Compute subscription days from the provided dates
+  const durationDays = Math.round((expiryDate - activatedDate) / (1000 * 60 * 60 * 24));
+
+  const instrId = product.type === 'chatgpt' ? 'chatgpt-plus' : 'default-claude';
+
+  tokens[token] = {
+    // Identity
+    customerName,
+    productId,
+    productName:      product.name,
+    packageType:      packageLabel,
+    price:            price ? parseFloat(price) : 0,
+    currency:         settings.currency       || 'USD',
+    currencySymbol:   settings.currencySymbol || '$',
+    // Contact
+    email:            email.trim(),
+    wechat:           (wechat || '').trim(),
+    customEmail:      customEmail  || null,
+    // Org / session data
+    orgId:            (orgId       || '').trim(),
+    sessionData:      (sessionData || '').trim(),
+    // Product
+    product:          product.type,
+    credentialsMode:  product.credentialsMode || false,
+    loginDetails:     product.loginDetails    || '',
+    accessLink:       customPortalLink || product.accessLink || '',
+    instructionSetId:     instrId,
+    postInstructionSetId: instrId,
+    // Reseller
+    resellerId:   resellerId   || null,
+    resellerName: resellerName || null,
+    // Dates — all custom
+    createdAt:               new Date().toISOString(),
+    expiresAt:               new Date(Date.now() + (6 * 30 * 24 * 60 * 60 * 1000)).toISOString(), // link expiry (6mo)
+    submittedAt:             activatedDate.toISOString(),
+    approvedAt:              activatedDate.toISOString(),
+    subscriptionExpiresAt:   expiryDate.toISOString(),
+    subscriptionDays:        durationDays,
+    durationDays,
+    // Status — fully activated from the start
+    used:        true,
+    approved:    true,
+    declined:    false,
+    deactivated: false,
+    // Notes
+    notes: notes || '',
+    // Mark as imported so admin can filter/distinguish
+    importedAt:  new Date().toISOString(),
+    imported:    true,
+  };
+
+  saveTokens(tokens);
+
+  // Log to sessions.txt same as a normal submission
+  const lines = [
+    '══════════════════════════════════════════════════════',
+    `IMPORTED AT  : ${new Date().toISOString()}`,
+    `Customer     : ${customerName}`,
+    `Package      : ${packageLabel}`,
+    `Price        : ${settings.currencySymbol || '$'}${price || 0}`,
+    `Activated On : ${activatedDate.toISOString()}`,
+    `Expires On   : ${expiryDate.toISOString()}`,
+    orgId       ? `Org ID       : ${orgId.trim()}`       : '',
+    sessionData ? `Session Data : [provided]`             : '',
+    wechat      ? `WeChat       : ${wechat.trim()}`       : '',
+    `Email        : ${email.trim()}`,
+    notes       ? `Notes        : ${notes}`               : '',
+    '══════════════════════════════════════════════════════', '',
+  ].filter(l => l !== '');
+  fs.appendFileSync(SESSIONS_FILE, lines.join('\n'));
+
+  const link = `${req.protocol}://${req.get('host')}/submit?token=${token}`;
+  res.json({ success: true, token, link });
+});
+
 // ── Validate token ─────────────────────────────────────────────────────────────
 app.get('/api/validate-token', (req, res) => {
   const { token } = req.query;
@@ -485,12 +798,41 @@ app.get('/api/validate-token', (req, res) => {
 
   if (t.used) {
     const { pre, post } = getInstrSets(t);
-    return res.json({ valid: true, submitted: true, approved: t.approved || false, approvedAt: t.approvedAt || null, customerName: t.customerName, packageType: t.packageType, product: t.product || 'claude', credentialsMode: t.credentialsMode || false, loginDetails: t.approved ? (t.loginDetails || '') : '', accessLink: t.approved ? (t.accessLink || '') : '', accessLink: t.approved ? (t.accessLink || '') : '', orgId: t.orgId || '', sessionData: t.sessionData || '', wechat: t.wechat || '', email: t.email || '', subscriptionExpiresAt: t.subscriptionExpiresAt || null, durationDays: t.durationDays || 30, processingText: pre.processingText, approvedText: pre.approvedText, approvedSteps: pre.approvedSteps, postApprovedText: post.postApprovedText, postApprovedSteps: post.postApprovedSteps, notification: notifPayload });
+    const prod = (loadProducts().products || []).find(p => p.id === t.productId) || {};
+    const theme = { logo: prod.logo||'', themeColor: prod.color||'', headerText: prod.headerText||'', tagline: prod.tagline||'', formTitle: prod.formTitle||'', formSubtitle: prod.formSubtitle||'', customInstructions: prod.customInstructions||'', instructionTitle: prod.instructionTitle||'', instrMedia: prod.instrMedia||'' };
+    return res.json({ valid: true, submitted: true, approved: t.approved || false, approvedAt: t.approvedAt || null, customerName: t.customerName, packageType: t.packageType, product: t.product || 'claude', credentialsMode: t.credentialsMode || false, loginDetails: t.approved ? (t.loginDetails || '') : '', accessLink: t.approved ? (t.accessLink || '') : '', orgId: t.orgId || '', sessionData: t.sessionData || '', wechat: t.wechat || '', email: t.email || '', subscriptionExpiresAt: t.subscriptionExpiresAt || null, durationDays: t.durationDays || 30, processingText: pre.processingText, approvedText: pre.approvedText, approvedSteps: pre.approvedSteps, postApprovedText: post.postApprovedText, postApprovedSteps: post.postApprovedSteps, notification: notifPayload, theme });
   }
   if (t.expiresAt && new Date() > new Date(t.expiresAt)) return res.status(410).json({ valid: false, error: 'This activation link has expired. Please contact support for a new link.' });
 
   const { pre, post } = getInstrSets(t);
-  res.json({ valid: true, submitted: false, customerName: t.customerName, packageType: t.packageType, product: t.product || 'claude', credentialsMode: t.credentialsMode || false, processingText: pre.processingText, approvedText: pre.approvedText, approvedSteps: pre.approvedSteps, postApprovedText: post.postApprovedText, postApprovedSteps: post.postApprovedSteps, notification: notifPayload });
+  const prod2 = (loadProducts().products || []).find(p => p.id === t.productId) || {};
+  const theme2 = { logo: prod2.logo||'', themeColor: prod2.color||'', headerText: prod2.headerText||'', tagline: prod2.tagline||'', formTitle: prod2.formTitle||'', formSubtitle: prod2.formSubtitle||'', customInstructions: prod2.customInstructions||'', instructionTitle: prod2.instructionTitle||'', instrMedia: prod2.instrMedia||'' };
+  res.json({ valid: true, submitted: false, customerName: t.customerName, packageType: t.packageType, product: t.product || 'claude', credentialsMode: t.credentialsMode || false, processingText: pre.processingText, approvedText: pre.approvedText, approvedSteps: pre.approvedSteps, postApprovedText: post.postApprovedText, postApprovedSteps: post.postApprovedSteps, notification: notifPayload, theme: theme2 });
+});
+
+// ── Declined appeal ────────────────────────────────────────────────────────
+app.post('/api/appeal', (req, res) => {
+  const { token, message } = req.body;
+  if (!token || !message) return res.status(400).json({ ok: false, error: 'Token and message are required.' });
+  const tokens = loadTokens();
+  const t = tokens[token];
+  if (!t) return res.status(404).json({ ok: false, error: 'Token not found.' });
+  if (!t.declined) return res.status(400).json({ ok: false, error: 'This token has not been declined.' });
+
+  // Store appeal on the token
+  tokens[token].appeal = { message, submittedAt: new Date().toISOString() };
+  saveTokens(tokens);
+
+  // Log to sessions file
+  fs.appendFileSync(SESSIONS_FILE,
+    '── APPEAL ──────────────────────────────────────────────\n' +
+    'Token   : ' + token + '\n' +
+    'Customer: ' + (t.customerName || '—') + '\n' +
+    'Message : ' + message + '\n' +
+    'At      : ' + new Date().toISOString() + '\n\n'
+  );
+
+  res.json({ ok: true });
 });
 
 // ── Submit ─────────────────────────────────────────────────────────────────────
@@ -585,11 +927,12 @@ app.post('/admin/approve', async (req, res) => {
 
   // Auto-send activation email if customer has email + template configured
   const t = tokens[token];
-  if (t.email) {
+  const receiptTo = t.customEmail || t.email;
+  if (receiptTo) {
     try {
-      // Always send the activation receipt
+      // Always send the activation receipt (to customEmail if set, else customer email)
       await sendEmail({
-        to:      t.email,
+        to:      receiptTo,
         subject: `Your ${t.packageType || 'subscription'} is now active — DTC Receipt`,
         html:    receiptTemplate(t),
         type:    'receipt',
