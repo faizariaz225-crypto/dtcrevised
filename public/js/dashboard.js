@@ -42,11 +42,11 @@ const Dashboard = (() => {
 
   // ── Action cell ────────────────────────────────────────────────────────────
   const _actionCell = (t, token, status) => {
-    if (t.deactivated) return `<div><span class="badge b-deact">⊘ Deactivated</span><div style="font-size:.62rem;color:#6b7280;font-family:'JetBrains Mono',monospace;margin-top:.2rem">⊘ ${t.deactivatedAt ? fmtFull(new Date(t.deactivatedAt)) : '—'}</div><button class="action-btn react" style="margin-top:.4rem" onclick="Dashboard.reactivate('${token}')">↑ Reactivate</button></div>`;
-    if (t.approved)    return `<div><span class="badge b-act">✓ Activated</span><div style="font-size:.62rem;color:var(--success);font-family:'JetBrains Mono',monospace;margin-top:.2rem">✓ ${fmtFull(new Date(t.approvedAt))}</div><button class="action-btn deact" style="margin-top:.4rem" onclick="Dashboard.deactivate('${token}')">⊘ Deactivate</button></div>`;
-    if (t.declined)    return `<div><span class="badge b-dec">✕ Declined</span><div style="font-size:.62rem;color:var(--error);font-family:'JetBrains Mono',monospace;margin-top:.2rem">✕ ${fmtFull(new Date(t.declinedAt))}</div><button class="action-btn deact" style="margin-top:.4rem" onclick="Dashboard.deactivate('${token}')">⊘ Deactivate</button></div>`;
-    if (status === 'submitted') return `<div class="action-wrap"><button class="approve-btn" id="ab-${token}" onclick="Dashboard.approve('${token}')">✓ Approve</button><button class="decline-btn" id="db-${token}" onclick="Modals.openDecline('${token}')">✕ Decline</button><button class="action-btn deact" onclick="Dashboard.deactivate('${token}')">⊘ Deactivate</button></div>`;
-    if (!t.used) return `<div><button class="action-btn deact" onclick="Dashboard.deactivate('${token}')">⊘ Deactivate</button></div>`;
+    if (t.deactivated) return `<div><span class="badge b-deact">⊘ Deactivated</span><div style="font-size:.62rem;color:#6b7280;font-family:'JetBrains Mono',monospace;margin-top:.2rem">⊘ ${t.deactivatedAt ? fmtFull(new Date(t.deactivatedAt)) : '—'}</div><button class="action-btn react" style="margin-top:.4rem" onclick="Dashboard.reactivate('${token}')">↑ Reactivate</button><button class="action-btn" style="margin-top:.3rem;background:#f8fafc;color:var(--muted)" onclick="EditCustomer.open('${token}')">✏ Edit</button></div>`;
+    if (t.approved)    return `<div><span class="badge b-act">✓ Activated</span><div style="font-size:.62rem;color:var(--success);font-family:'JetBrains Mono',monospace;margin-top:.2rem">✓ ${fmtFull(new Date(t.approvedAt))}</div><button class="action-btn deact" style="margin-top:.4rem" onclick="Dashboard.deactivate('${token}')">⊘ Deactivate</button><button class="action-btn" style="margin-top:.3rem;background:#f8fafc;color:var(--muted)" onclick="EditCustomer.open('${token}')">✏ Edit</button></div>`;
+    if (t.declined)    return `<div><span class="badge b-dec">✕ Declined</span><div style="font-size:.62rem;color:var(--error);font-family:'JetBrains Mono',monospace;margin-top:.2rem">✕ ${fmtFull(new Date(t.declinedAt))}</div><button class="action-btn deact" style="margin-top:.4rem" onclick="Dashboard.deactivate('${token}')">⊘ Deactivate</button><button class="action-btn" style="margin-top:.3rem;background:#f8fafc;color:var(--muted)" onclick="EditCustomer.open('${token}')">✏ Edit</button></div>`;
+    if (status === 'submitted') return `<div class="action-wrap"><button class="approve-btn" id="ab-${token}" onclick="Dashboard.approve('${token}')">✓ Approve</button><button class="decline-btn" id="db-${token}" onclick="Modals.openDecline('${token}')">✕ Decline</button><button class="action-btn deact" onclick="Dashboard.deactivate('${token}')">⊘ Deactivate</button><button class="action-btn" style="margin-top:.3rem;background:#f8fafc;color:var(--muted)" onclick="EditCustomer.open('${token}')">✏ Edit</button></div>`;
+    if (!t.used) return `<div><button class="action-btn deact" onclick="Dashboard.deactivate('${token}')">⊘ Deactivate</button><button class="action-btn" style="margin-top:.3rem;background:#f8fafc;color:var(--muted)" onclick="EditCustomer.open('${token}')">✏ Edit</button></div>`;
     return '<span style="color:var(--muted2);font-size:.65rem">—</span>';
   };
 
@@ -63,6 +63,7 @@ const Dashboard = (() => {
       .map(([tok, t]) => [tok, t, getLinkStatus(t)])
       .sort((a, b) => new Date(b[1].createdAt || 0) - new Date(a[1].createdAt || 0));
     _updateStats(entries);
+    try { _renderInbox(); } catch(e) {}
     const filtered = filter === 'all' ? entries : entries.filter(([,, s]) => s === filter);
     const wrap = document.getElementById('dash-tbl');
     if (!filtered.length) { wrap.innerHTML = '<div class="empty">No links match this filter.</div>'; return; }
@@ -86,13 +87,14 @@ const Dashboard = (() => {
       const ac     = t.accessCount || 0;
       const hasLog = (t.accessLog || []).length > 0;
 
-      const mainRow = `<tr class="${rowCls}">
+      const mainRow = `<tr class="${rowCls}" data-token="${token}">`+`
         <td>
           <div style="display:flex;align-items:center;gap:.35rem;margin-bottom:.2rem;flex-wrap:wrap">${prodTag}${priceBadge}</div>
           <div style="font-weight:600;font-size:.82rem">${esc(t.customerName)}</div>
           <div style="font-size:.68rem;color:var(--muted);font-family:'JetBrains Mono',monospace">${esc(t.packageType)}</div>
           ${t.email ? `<div style="font-size:.68rem;color:var(--muted);font-family:'JetBrains Mono',monospace">${esc(t.email)}</div>` : ''}
           ${t.resellerId ? `<span style="font-size:.62rem;background:#fdf4ff;border:1px solid #e9d5ff;border-radius:4px;padding:.08rem .4rem;color:#7c3aed;font-weight:600">🤝 ${esc(t.resellerName||t.resellerId)}</span>` : ''}
+          ${t.imported  ? `<span style="font-size:.62rem;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:4px;padding:.08rem .4rem;color:#166534;font-weight:600">📥 Imported</span>` : ''}
         </td>
         <td>${statusBadge(status)}</td>
         <td>${_dataCell(t, token)}</td>
@@ -133,6 +135,89 @@ const Dashboard = (() => {
     try { Revenue.render(); } catch(e) { console.warn(e); }
   };
 
+  // ── Action-required inbox ──────────────────────────────────────────────────
+  const _renderInbox = () => {
+    const tokens  = Store.tokens || {};
+    const now     = Date.now();
+    const items   = [];
+
+    Object.entries(tokens).forEach(([token, t]) => {
+      // 1. Pending approvals — submitted but not yet approved/declined
+      if (t.used && !t.approved && !t.declined && !t.deactivated) {
+        const submitted = t.submittedAt ? Math.floor((now - new Date(t.submittedAt)) / 3600000) : 0;
+        items.push({
+          priority: 1,
+          color: '#dc2626', bg: '#fef2f2', border: '#fecaca',
+          icon: '🕐',
+          text: `<strong>${esc(t.customerName)}</strong> submitted ${submitted > 0 ? submitted + 'h ago' : 'just now'} — <em>${esc(t.packageType)}</em>`,
+          actions: `<button class="btn btn-outline btn-sm" style="border-color:#16a34a;color:#16a34a;font-size:.65rem;padding:.2rem .55rem" onclick="Dashboard.approve('${token}')">✓ Approve</button>
+                    <button class="btn btn-outline btn-sm" style="font-size:.65rem;padding:.2rem .55rem" onclick="Modals.openDecline('${token}')">✕ Decline</button>`
+        });
+      }
+
+      // 2. Customers expiring within 7 days
+      if (t.approved && !t.deactivated && t.subscriptionExpiresAt) {
+        const days = daysUntil(t.subscriptionExpiresAt);
+        if (days >= 0 && days <= 7) {
+          items.push({
+            priority: 2,
+            color: '#d97706', bg: '#fffbeb', border: '#fde68a',
+            icon: '⏰',
+            text: `<strong>${esc(t.customerName)}</strong> — ${esc(t.packageType)} expires in <strong style="color:#d97706">${days} day${days !== 1 ? 's' : ''}</strong>`,
+            actions: `<a href="https://wa.me/8619738122807?text=${encodeURIComponent(`Hi, following up on renewal for ${t.customerName} — ${t.packageType} expires in ${days} day${days!==1?'s':''}!`)}" target="_blank" class="btn btn-outline btn-sm" style="font-size:.65rem;padding:.2rem .55rem;color:#25d366;border-color:#25d366">💬 WhatsApp</a>`
+          });
+        }
+      }
+
+      // 3. Stale links — opened 48h+ ago but not submitted
+      if (t.firstAccessedAt && !t.used && !t.deactivated) {
+        const hrsOpen = (now - new Date(t.firstAccessedAt)) / 3600000;
+        if (hrsOpen >= 48) {
+          const hrsDisplay = Math.floor(hrsOpen);
+          items.push({
+            priority: 3,
+            color: '#6366f1', bg: '#f5f3ff', border: '#e9d5ff',
+            icon: '🔗',
+            text: `<strong>${esc(t.customerName)}</strong> opened their link <strong style="color:#6366f1">${hrsDisplay}h ago</strong> but hasn't submitted — ${esc(t.packageType)}`,
+            actions: `<button class="btn btn-outline btn-sm" style="font-size:.65rem;padding:.2rem .55rem" onclick="navigator.clipboard.writeText('${window.location.origin}/submit?token=${token}').then(()=>alert('✓ Link copied'))">📋 Copy Link</button>`
+          });
+        }
+      }
+
+      // 4. Pending appeals — declined tokens with an appeal message
+      if (t.declined && t.appeal && !t.appeal.reviewed) {
+        const appealPreview = (t.appeal.message || '').slice(0, 80) + ((t.appeal.message || '').length > 80 ? '…' : '');
+        items.push({
+          priority: 1,
+          color: '#7c3aed', bg: '#fdf4ff', border: '#e9d5ff',
+          icon: '📨',
+          text: '<strong>' + esc(t.customerName) + '</strong> has submitted an appeal — <em>' + esc(appealPreview) + '</em>',
+          actions: '<button class="btn btn-outline btn-sm" style="font-size:.65rem;padding:.2rem .55rem" onclick="EditCustomer.open(\'' + token + '\')">👁 Review</button>'
+        });
+      }
+    });  // end Object.entries forEach
+
+    const inbox    = document.getElementById('action-inbox');
+    const itemsEl  = document.getElementById('action-inbox-items');
+    if (!inbox || !itemsEl) return;
+
+    if (!items.length) { inbox.style.display = 'none'; return; }
+
+    // Sort by priority then newest first
+    items.sort((a, b) => a.priority - b.priority);
+
+    itemsEl.innerHTML = items.map(item => `
+      <div style="display:flex;align-items:flex-start;gap:.65rem;background:${item.bg};border:1px solid ${item.border};border-radius:9px;padding:.65rem .85rem">
+        <span style="font-size:1rem;flex-shrink:0;margin-top:.05rem">${item.icon}</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:.78rem;color:var(--text);line-height:1.5;margin-bottom:.35rem">${item.text}</div>
+          <div style="display:flex;gap:.35rem;flex-wrap:wrap">${item.actions}</div>
+        </div>
+      </div>`).join('');
+
+    inbox.style.display = '';
+  };
+
   // ── Generate link ──────────────────────────────────────────────────────────
   const generateLink = async () => {
     const customerName  = document.getElementById('cust-name').value.trim();
@@ -154,6 +239,8 @@ const Dashboard = (() => {
       ? Resellers.getSelectedReseller()
       : { resellerId: null, resellerName: null };
 
+    const customEmail = (document.getElementById('gen-custom-email') || {}).value?.trim() || undefined;
+
     const d = await api('/admin/generate', {
       adminKey: Store.adminKey, customerName, productId, packageLabel,
       price: parseFloat(price),
@@ -161,12 +248,20 @@ const Dashboard = (() => {
       postInstructionSetId: postInstr || undefined,
       resellerId:   resellerId   || undefined,
       resellerName: resellerName || undefined,
+      customEmail:  customEmail  || undefined,
     });
     if (!d || d.error) { errEl.textContent = (d && d.error) || 'Failed to generate link.'; errEl.classList.add('show'); return; }
     document.getElementById('gen-link').textContent = d.link;
     const sym = (Store.settings||{}).currencySymbol||'$';
     document.getElementById('gen-price-display').textContent = sym + parseFloat(price).toFixed(2);
     document.getElementById('link-result').classList.add('show');
+
+    // Build pre-filled WhatsApp message
+    const waMsg = encodeURIComponent(
+      `Hi ${customerName}! 👋\n\nYour ${packageLabel} activation link is ready.\n\nClick the link below to complete your activation:\n${d.link}\n\nPrice: ${sym}${parseFloat(price).toFixed(2)} · Valid for 6 months\n\nContact us if you need any help! — DTC`
+    );
+    const waBtn = document.getElementById('wa-send-btn');
+    if (waBtn) waBtn.href = `https://wa.me/?text=${waMsg}`;
     document.getElementById('copy-btn').textContent = 'Copy';
     document.getElementById('copy-btn').classList.remove('done');
     reload();

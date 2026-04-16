@@ -77,5 +77,66 @@ const Settings = (() => {
     _renderActivationTemplateDropdown(current);
   };
 
-  return { load, save, refreshTemplateDropdown, CURRENCIES };
+  const loadBackups = async () => {
+    const wrap = document.getElementById('backup-list');
+    if (!wrap) return;
+    wrap.innerHTML = '<div style="font-size:.78rem;color:var(--muted)">Loading…</div>';
+    try {
+      const d = await fetch('/admin/backups?adminKey=' + encodeURIComponent(Store.adminKey)).then(r => r.json());
+      const backups = (d && d.backups) || [];
+      if (!backups.length) {
+        wrap.innerHTML = '<div style="font-size:.78rem;color:var(--muted)">No backups yet. Click "Run Backup Now" to create the first one.</div>';
+        return;
+      }
+      wrap.innerHTML = '<div style="display:flex;flex-direction:column;gap:.4rem">' +
+        backups.map(b => {
+          const date = new Date(b.createdAt).toLocaleString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+          const kb   = (b.size / 1024).toFixed(1);
+          return '<div style="display:flex;align-items:center;justify-content:space-between;padding:.55rem .8rem;background:var(--white);border:1px solid var(--border);border-radius:8px;gap:.5rem;flex-wrap:wrap">' +
+            '<div>' +
+              '<div style="font-size:.78rem;font-weight:600;color:var(--text);font-family:\'JetBrains Mono\',monospace">' + b.name.replace('dtc-backup-','').replace('.tar','') + '</div>' +
+              '<div style="font-size:.68rem;color:var(--muted);margin-top:.1rem">' + date + ' · ' + kb + ' KB</div>' +
+            '</div>' +
+            '<button class="btn btn-outline btn-sm" style="color:var(--error);border-color:var(--error-border)" onclick="Settings.restoreBackup(\'' + b.name + '\')">↩ Restore</button>' +
+          '</div>';
+        }).join('') +
+      '</div>';
+    } catch {
+      wrap.innerHTML = '<div style="font-size:.78rem;color:var(--error)">Failed to load backups.</div>';
+    }
+  };
+
+  const runBackupNow = async () => {
+    const btn = event.target;
+    btn.disabled = true; btn.textContent = 'Running…';
+    try {
+      const d = await fetch('/admin/backups/run-now', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adminKey: Store.adminKey })
+      }).then(r => r.json());
+      if (d && d.success) { alert('✓ Backup created successfully.'); loadBackups(); }
+      else alert('Backup failed.');
+    } catch { alert('Network error.'); }
+    btn.disabled = false; btn.textContent = '⬇ Run Backup Now';
+  };
+
+  const restoreBackup = async (filename) => {
+    if (!confirm('Restore backup "' + filename + '"?\n\nThis will REPLACE all current data with the backup. This cannot be undone.\n\nA safety backup of the current state will be created first.')) return;
+    try {
+      const d = await fetch('/admin/backups/restore', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adminKey: Store.adminKey, filename })
+      }).then(r => r.json());
+      if (d && d.success) {
+        alert('✓ Restored ' + d.restored + '. The page will reload.');
+        window.location.reload();
+      } else {
+        alert('Restore failed: ' + (d.error || 'Unknown error'));
+      }
+    } catch { alert('Network error.'); }
+  };
+
+  return { load, save, refreshTemplateDropdown, CURRENCIES, loadBackups, runBackupNow, restoreBackup };
 })();

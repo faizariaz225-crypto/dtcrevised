@@ -58,15 +58,26 @@ const Products = (() => {
   const openModal = (id) => {
     const p = id ? _products.find(x => x.id === id) : null;
     document.getElementById('prod-modal-title').textContent = p ? 'Edit Product' : 'New Product';
-    document.getElementById('prod-id').value           = p ? p.id : 'prod-' + Date.now();
-    document.getElementById('prod-name').value         = p ? p.name : '';
-    document.getElementById('prod-desc').value         = p ? (p.description || '') : '';
-    document.getElementById('prod-type').value         = p ? (p.type || 'session') : 'session';
-    document.getElementById('prod-color').value        = p ? (p.color || '#2563eb') : '#2563eb';
-    document.getElementById('prod-active').checked     = p ? (p.active !== false) : true;
-    document.getElementById('prod-creds-mode').checked = p ? !!p.credentialsMode : false;
-    document.getElementById('prod-login-details').value= p ? (p.loginDetails || '') : '';
-    document.getElementById('prod-access-link').value  = p ? (p.accessLink   || '') : '';
+    document.getElementById('prod-id').value              = p ? p.id : 'prod-' + Date.now();
+    document.getElementById('prod-name').value            = p ? p.name : '';
+    document.getElementById('prod-desc').value            = p ? (p.description || '') : '';
+    document.getElementById('prod-type').value            = p ? (p.type || 'session') : 'session';
+    document.getElementById('prod-color').value           = p ? (p.color || '#2563eb') : '#2563eb';
+    document.getElementById('prod-active').checked        = p ? (p.active !== false) : true;
+    document.getElementById('prod-creds-mode').checked    = p ? !!p.credentialsMode : false;
+    document.getElementById('prod-login-details').value   = p ? (p.loginDetails || '') : '';
+    document.getElementById('prod-access-link').value     = p ? (p.accessLink   || '') : '';
+    // New branding + content fields
+    document.getElementById('prod-logo').value            = p ? (p.logo              || '') : '';
+    document.getElementById('prod-header-text').value     = p ? (p.headerText        || '') : '';
+    document.getElementById('prod-tagline').value         = p ? (p.tagline           || '') : '';
+    document.getElementById('prod-portal-label').value    = p ? (p.portalLabel       || '') : '';
+    document.getElementById('prod-form-title').value      = p ? (p.formTitle         || '') : '';
+    document.getElementById('prod-form-subtitle').value   = p ? (p.formSubtitle      || '') : '';
+    document.getElementById('prod-instr-title').value     = p ? (p.instructionTitle  || '') : '';
+    document.getElementById('prod-custom-instr').value    = p ? (p.customInstructions|| '') : '';
+    document.getElementById('prod-instr-media').value     = p ? (p.instrMedia         || '') : '';
+    _previewMedia(p ? (p.instrMedia || '') : '');
     _renderPkgRows(p ? p.packages : [{ label: '', price: '', durationDays: 30 }]);
     _toggleCredsMode();
     document.getElementById('prod-err').classList.remove('show');
@@ -74,6 +85,20 @@ const Products = (() => {
   };
 
   const closeModal = () => document.getElementById('prod-modal').classList.remove('open');
+
+  // Live preview of the GIF/video in the admin modal
+  const _previewMedia = (url) => {
+    const wrap = document.getElementById('prod-instr-media-preview');
+    if (!wrap) return;
+    if (!url) { wrap.style.display = 'none'; wrap.innerHTML = ''; return; }
+    const isVideo = /\.(mp4|webm|ogg)(\?|$)/i.test(url);
+    wrap.style.display = '';
+    if (isVideo) {
+      wrap.innerHTML = `<video src="${url}" controls style="width:100%;max-height:160px;display:block;background:#000" preload="metadata"></video>`;
+    } else {
+      wrap.innerHTML = `<img src="${url}" alt="Preview" style="width:100%;max-height:160px;object-fit:cover;display:block" onerror="this.parentElement.innerHTML='<div style=\\'padding:.6rem;font-size:.72rem;color:var(--error)\\'>⚠ Could not load — check the URL</div>'"/>`;
+    }
+  };
 
   const _renderPkgRows = (packages) => {
     const wrap = document.getElementById('pkg-rows');
@@ -130,13 +155,23 @@ const Products = (() => {
 
     const product = {
       id, name,
-      description:     document.getElementById('prod-desc').value.trim(),
-      type:            document.getElementById('prod-type').value,
-      color:           document.getElementById('prod-color').value,
-      active:          document.getElementById('prod-active').checked,
-      credentialsMode: document.getElementById('prod-creds-mode').checked,
-      loginDetails:    document.getElementById('prod-login-details').value.trim(),
-      accessLink:      document.getElementById('prod-access-link').value.trim(),
+      description:          document.getElementById('prod-desc').value.trim(),
+      type:                 document.getElementById('prod-type').value,
+      color:                document.getElementById('prod-color').value,
+      active:               document.getElementById('prod-active').checked,
+      credentialsMode:      document.getElementById('prod-creds-mode').checked,
+      loginDetails:         document.getElementById('prod-login-details').value.trim(),
+      accessLink:           document.getElementById('prod-access-link').value.trim(),
+      // Branding + content fields
+      logo:                 document.getElementById('prod-logo').value.trim(),
+      headerText:           document.getElementById('prod-header-text').value.trim(),
+      tagline:              document.getElementById('prod-tagline').value.trim(),
+      portalLabel:          document.getElementById('prod-portal-label').value.trim(),
+      formTitle:            document.getElementById('prod-form-title').value.trim(),
+      formSubtitle:         document.getElementById('prod-form-subtitle').value.trim(),
+      instructionTitle:     document.getElementById('prod-instr-title').value.trim(),
+      customInstructions:   document.getElementById('prod-custom-instr').value.trim(),
+      instrMedia:           document.getElementById('prod-instr-media').value.trim(),
       packages,
     };
 
@@ -159,7 +194,7 @@ const Products = (() => {
     else alert('Failed to delete.');
   };
 
-  return { loadData, getAll, render, openModal, closeModal, addPkgRow, removePkgRow, save, remove, _toggleCredsMode };
+  return { loadData, getAll, render, openModal, closeModal, addPkgRow, removePkgRow, save, remove, _toggleCredsMode, previewMedia: _previewMedia };
 })();
 
 // ── Push updated credentials to all active tokens ────────────────────────────

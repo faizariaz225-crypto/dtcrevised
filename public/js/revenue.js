@@ -32,6 +32,7 @@ const Revenue = (() => {
     _set('rev-month-total',    sym + thisMonth.toFixed(2));
     _set('rev-avg-sale',       sym + avgSale.toFixed(2));
     _set('rev-count',          activated.length + ' sales');
+    _renderGoal(thisMonth);
 
     // ── Per-product breakdown ────────────────────────────────────────────────
     const wrap = document.getElementById('rev-breakdown');
@@ -117,5 +118,74 @@ const Revenue = (() => {
 
   const _set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
 
-  return { render };
+  // ── Monthly goal tracker ──────────────────────────────────────────────────
+  const _goalKey = 'dtc-monthly-goal';
+
+  const _loadGoal = () => {
+    try { return parseFloat(localStorage.getItem(_goalKey)) || 0; } catch { return 0; }
+  };
+
+  const _renderGoal = (thisMonth) => {
+    const goal    = _loadGoal();
+    const sym     = _sym();
+    const symEl   = document.getElementById('rev-goal-sym');
+    const inputEl = document.getElementById('rev-goal-input');
+    const barWrap = document.getElementById('rev-goal-bar-wrap');
+    const hintEl  = document.getElementById('rev-goal-hint');
+    if (symEl)   symEl.textContent  = sym;
+    if (inputEl && !inputEl.value)  inputEl.value = goal || '';
+
+    if (!goal || goal <= 0) {
+      if (barWrap) barWrap.style.display = 'none';
+      if (hintEl)  hintEl.textContent = 'No goal set yet.';
+      return;
+    }
+
+    const pct       = Math.min(100, (thisMonth / goal) * 100);
+    const remaining = goal - thisMonth;
+    const isHit     = thisMonth >= goal;
+
+    if (barWrap) barWrap.style.display = '';
+    const fillEl = document.getElementById('rev-goal-fill');
+    if (fillEl) {
+      fillEl.style.width      = pct.toFixed(1) + '%';
+      fillEl.style.background = isHit ? 'var(--success)' : pct > 75 ? '#f59e0b' : 'var(--blue)';
+    }
+
+    _set('rev-goal-pct',       pct.toFixed(0) + '%' + (isHit ? ' 🎉' : ''));
+    _set('rev-goal-label',     isHit ? '🎉 Goal reached this month!' : 'This month vs goal');
+    _set('rev-goal-current',   sym + thisMonth.toFixed(2) + ' earned');
+    _set('rev-goal-remaining', isHit ? '' : sym + remaining.toFixed(2) + ' to go');
+
+    // Daily run-rate hint
+    const now      = new Date();
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const daysPassed  = now.getDate();
+    const daysLeft    = daysInMonth - daysPassed;
+    if (hintEl && daysLeft > 0 && !isHit) {
+      const needed = remaining / daysLeft;
+      hintEl.textContent = sym + needed.toFixed(2) + '/day needed in ' + daysLeft + ' days remaining';
+    } else if (hintEl && isHit) {
+      hintEl.textContent = '✓ Monthly goal achieved!';
+    }
+  };
+
+  const updateGoal = (val) => {
+    // Live preview as user types
+    const tokens   = Store.tokens || {};
+    const thisMonth = Object.values(tokens)
+      .filter(t => { if (!t.approved || !t.price) return false; const d = new Date(t.approvedAt), n = new Date(); return d.getMonth()===n.getMonth()&&d.getFullYear()===n.getFullYear(); })
+      .reduce((s, t) => s + (t.price || 0), 0);
+    try { localStorage.setItem(_goalKey, val); } catch {}
+    _renderGoal(thisMonth);
+  };
+
+  const saveGoal = () => {
+    const val = parseFloat(document.getElementById('rev-goal-input')?.value) || 0;
+    try { localStorage.setItem(_goalKey, val); } catch {}
+    const hintEl = document.getElementById('rev-goal-hint');
+    if (hintEl) { hintEl.textContent = '✓ Goal saved!'; setTimeout(() => { updateGoal(val); }, 1500); }
+  };
+
+  return { render, updateGoal, saveGoal };
 })();
