@@ -1,0 +1,1502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Activation — DTC</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#f0f4ff;--white:#fff;--blue:#2563eb;--blue-dark:#1d4ed8;--blue-light:#eff6ff;--blue-mid:#dbeafe;
+      --border:#e2e8f0;--text:#1e293b;--muted:#64748b;--muted2:#94a3b8;
+      --success:#16a34a;--success-bg:#f0fdf4;--success-border:#bbf7d0;
+      --error:#dc2626;--error-bg:#fef2f2;--error-border:#fecaca;
+      --warn:#d97706;--warn-bg:#fffbeb;--warn-border:#fde68a;
+      --gpt:#10a37f;--gpt-bg:#f0faf7;--gpt-border:#a7f3d0;--gpt-dark:#059669;
+      --shadow:0 1px 3px rgba(0,0,0,.08),0 4px 16px rgba(37,99,235,.06);
+      --shadow-lg:0 4px 24px rgba(37,99,235,.12),0 1px 4px rgba(0,0,0,.06);
+    }
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:0 1rem 5rem;background-image:radial-gradient(ellipse at 20% 0%,rgba(37,99,235,.07) 0%,transparent 50%),radial-gradient(ellipse at 80% 100%,rgba(99,102,241,.05) 0%,transparent 50%)}
+
+    /* Notification banner */
+    #notif-banner{display:none;width:100%;max-width:520px;margin:1.2rem auto .2rem;animation:fadeDown .4s ease}
+    .notif-inner{border-radius:10px;padding:.85rem 1.1rem;display:flex;align-items:flex-start;gap:.65rem;font-size:.82rem;font-weight:500;line-height:1.5}
+    .notif-info   {background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8}
+    .notif-success{background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d}
+    .notif-warning{background:#fffbeb;border:1px solid #fde68a;color:#b45309}
+    .notif-error  {background:#fef2f2;border:1px solid #fecaca;color:#dc2626}
+    .notif-icon{font-size:1rem;flex-shrink:0;margin-top:.05rem}
+    .notif-close{margin-left:auto;background:none;border:none;cursor:pointer;font-size:1rem;opacity:.5;padding:.1rem .3rem;flex-shrink:0}
+    .notif-close:hover{opacity:1}
+
+    .wrap{width:100%;max-width:520px;padding-top:2.5rem}
+    .brand{text-align:center;margin-bottom:2rem;animation:fadeDown .5s ease both}
+    .brand-logo{display:inline-flex;align-items:center;gap:.6rem;margin-bottom:.4rem}
+    .brand-icon{width:40px;height:40px;background:var(--blue);border-radius:10px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(37,99,235,.3)}
+    .brand-icon svg{width:22px;height:22px}
+    .brand-icon.gpt{background:var(--gpt);box-shadow:0 4px 12px rgba(16,163,127,.3)}
+    .brand-name{font-size:1.5rem;font-weight:700;color:var(--text);letter-spacing:-.025em}
+    .brand-tagline{font-size:.82rem;color:var(--muted);font-weight:500}
+    .brand-sub{font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted2);margin-top:.15rem}
+
+    .card{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:2rem;box-shadow:var(--shadow-lg);animation:fadeUp .6s ease both .1s;position:relative;overflow:hidden}
+    .card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--blue),#6366f1)}
+    .card.gpt-card::before{background:linear-gradient(90deg,var(--gpt),#0891b2)}
+
+    .service-badge{display:inline-flex;align-items:center;gap:.4rem;background:var(--blue-light);border:1px solid var(--blue-mid);border-radius:99px;padding:.3rem .9rem;font-size:.72rem;font-weight:600;color:var(--blue);margin-bottom:1.2rem}
+    .service-badge.gpt{background:var(--gpt-bg);border:1px solid var(--gpt-border);color:var(--gpt)}
+    .badge-dot{width:6px;height:6px;background:currentColor;border-radius:50%;animation:pulse 2s infinite}
+    .card-title{font-size:1.25rem;font-weight:700;margin-bottom:.35rem;color:var(--text);letter-spacing:-.02em}
+    .card-sub{font-size:.83rem;color:var(--muted);line-height:1.65;margin-bottom:1.6rem}
+    .card-sub strong{color:var(--text)}
+
+    .instructions{background:#f8faff;border:1px solid var(--blue-mid);border-radius:10px;padding:.95rem 1.1rem;margin-bottom:1.5rem;font-size:.8rem;color:var(--muted);line-height:1.8}
+    .instructions.gpt-instr{background:var(--gpt-bg);border-color:var(--gpt-border)}
+    .instructions strong{color:var(--text);display:block;margin-bottom:.4rem;font-size:.82rem;font-weight:600}
+    .instructions ol{padding-left:1.3rem}
+    .instructions li{margin-bottom:.3rem}
+    .instructions li span{color:var(--text);font-weight:500}
+    .instructions .example{margin-top:.75rem;padding:.6rem .85rem;background:var(--white);border:1px solid var(--border);border-radius:7px;font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--muted);word-break:break-all}
+    .instructions .example span{color:var(--blue);font-weight:500}
+    .instructions .example.gpt-ex span{color:var(--gpt)}
+    .gpt-notice{margin-top:.7rem;padding:.55rem .8rem;background:var(--white);border:1px solid var(--gpt-border);border-radius:7px;font-size:.72rem;color:var(--muted)}
+
+    .form-group{margin-bottom:1.1rem}
+    label{display:block;font-size:.72rem;font-weight:600;color:var(--text);margin-bottom:.4rem}
+    .input-wrap{position:relative}
+    .input-wrap input,.input-wrap textarea{width:100%;background:var(--white);border:1.5px solid var(--border);border-radius:9px;padding:.78rem 1rem .78rem 2.7rem;font-family:'Inter',sans-serif;font-size:.88rem;color:var(--text);outline:none;transition:border-color .2s,box-shadow .2s}
+    .input-wrap textarea{padding:.78rem 1rem;min-height:110px;resize:vertical;font-family:'JetBrains Mono',monospace;font-size:.78rem;line-height:1.5}
+    .input-wrap input::placeholder,.input-wrap textarea::placeholder{color:var(--muted2)}
+    .input-wrap input:focus,.input-wrap textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+    .input-wrap input.ok,.input-wrap textarea.ok{border-color:var(--success)}
+    .input-wrap input.err,.input-wrap textarea.err{border-color:var(--error);box-shadow:0 0 0 3px rgba(220,38,38,.08)}
+    .input-icon{position:absolute;left:.85rem;top:50%;transform:translateY(-50%);color:var(--muted2);font-size:.85rem;pointer-events:none}
+    .input-icon.top{top:.9rem;transform:none}
+    .field-hint{font-size:.7rem;color:var(--muted2);margin-top:.35rem}
+    .field-error{font-size:.73rem;color:var(--error);margin-top:.35rem;display:none}
+    .field-error.show{display:block;animation:slideIn .18s ease}
+    .divider{height:1px;background:var(--border);margin:1.4rem 0}
+
+    .btn-submit{width:100%;background:var(--blue);color:#fff;border:none;border-radius:10px;padding:.9rem;font-family:'Inter',sans-serif;font-size:.92rem;font-weight:600;cursor:pointer;letter-spacing:.01em;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:.5rem}
+    .btn-submit:hover:not(:disabled){background:var(--blue-dark);transform:translateY(-1px);box-shadow:0 6px 20px rgba(37,99,235,.3)}
+    .btn-submit:disabled{background:#93c5fd;cursor:not-allowed;transform:none}
+    .btn-submit.gpt-btn{background:var(--gpt)}.btn-submit.gpt-btn:hover:not(:disabled){background:var(--gpt-dark)}
+    .btn-submit.gpt-btn:disabled{background:#6ee7b7}
+    .spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;display:none}
+    .btn-submit.loading .btn-text{display:none}
+    .btn-submit.loading .spinner{display:block}
+
+    .screen{display:none}.screen.active{display:block}
+    #screen-loading{text-align:center;padding:2.5rem 0}
+    #screen-invalid,#screen-declined,#screen-processing,#screen-activated{text-align:center}
+    .mini-loader{width:32px;height:32px;border:2.5px solid var(--blue-mid);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite;margin:2rem auto 1rem}
+    .state-icon{width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.8rem;margin:0 auto 1.4rem}
+    .si-error{background:var(--error-bg);border:2px solid var(--error-border)}
+    .check-ring{width:72px;height:72px;margin:0 auto 1.4rem;display:block}
+    .check-ring circle{stroke-dasharray:220;stroke-dashoffset:220;animation:drawC .7s ease forwards .1s}
+    .check-ring polyline{stroke-dasharray:120;stroke-dashoffset:120;animation:drawK .45s ease forwards .75s}
+    .state-title{font-size:1.2rem;font-weight:700;color:var(--text);margin-bottom:.45rem;letter-spacing:-.02em}
+    .state-sub{font-size:.83rem;color:var(--muted);line-height:1.7;margin-bottom:1.4rem}
+
+    .orbit{width:80px;height:80px;margin:0 auto 1.8rem;position:relative}
+    .orbit-ring{width:80px;height:80px;border-radius:50%;border:2px solid var(--blue-mid);position:absolute;top:0;left:0}
+    .orbit-ring::after{content:'';width:10px;height:10px;background:var(--blue);border-radius:50%;position:absolute;top:-5px;left:50%;transform:translateX(-50%);box-shadow:0 0 8px rgba(37,99,235,.5)}
+    .orbit-ring.r1{animation:orbit1 2s linear infinite}
+    .orbit-ring.r2{width:52px;height:52px;top:14px;left:14px;border-color:#bfdbfe;animation:orbit2 1.4s linear infinite reverse;opacity:.7}
+    .orbit-ring.r2::after{width:7px;height:7px;top:-3.5px;background:#93c5fd;box-shadow:none}
+    .orbit-center{width:32px;height:32px;border-radius:50%;background:var(--blue-light);border:2px solid var(--blue-mid);position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;font-size:.85rem}
+    .orbit.gpt-orbit .orbit-ring{border-color:var(--gpt-border)}
+    .orbit.gpt-orbit .orbit-ring::after{background:var(--gpt)}
+    .orbit.gpt-orbit .orbit-ring.r2{border-color:#a7f3d0}
+    .orbit.gpt-orbit .orbit-ring.r2::after{background:#6ee7b7}
+    .orbit.gpt-orbit .orbit-center{background:var(--gpt-bg);border-color:var(--gpt-border)}
+
+    .pulse-bars{display:flex;align-items:flex-end;gap:4px;height:22px;margin:0 auto 1.3rem;width:fit-content}
+    .bar{width:5px;border-radius:3px;background:var(--blue-mid);animation:barPulse 1.2s ease-in-out infinite}
+    .bar.gpt-bar{background:var(--gpt-border)}
+    .bar:nth-child(1){animation-delay:0s;height:9px}.bar:nth-child(2){animation-delay:.15s;height:16px}.bar:nth-child(3){animation-delay:.3s;height:22px}.bar:nth-child(4){animation-delay:.45s;height:16px}.bar:nth-child(5){animation-delay:.6s;height:9px}
+
+    .order-card{background:#f8faff;border:1px solid var(--border);border-radius:11px;padding:1rem 1.2rem;text-align:left;margin-bottom:1rem}
+    .oc-row{display:flex;justify-content:space-between;align-items:flex-start;padding:.3rem 0;border-bottom:1px solid var(--border);font-size:.78rem;gap:.5rem}
+    .oc-row:last-child{border-bottom:none;padding-bottom:0}
+    .oc-row:first-child{padding-top:0}
+    .oc-label{color:var(--muted);font-size:.72rem;font-weight:500;flex-shrink:0}
+    .oc-value{font-family:'JetBrains Mono',monospace;font-size:.71rem;color:var(--text);text-align:right;word-break:break-all}
+    .pill{display:inline-flex;align-items:center;gap:.35rem;padding:.22rem .7rem;border-radius:99px;font-size:.68rem;font-weight:600}
+    .pill-proc{background:#eff6ff;border:1px solid #bfdbfe;color:var(--blue)}
+    .pill-active{background:var(--success-bg);border:1px solid var(--success-border);color:var(--success)}
+    .pill .pd{width:5px;height:5px;border-radius:50%;background:currentColor;animation:pulse 1.5s infinite}
+
+    .act-banner{background:var(--success-bg);border:1px solid var(--success-border);border-radius:10px;padding:.9rem 1.1rem;margin-bottom:1rem;text-align:left}
+    .act-banner-label{font-size:.67rem;text-transform:uppercase;letter-spacing:.1em;color:var(--success);font-weight:700;margin-bottom:.5rem}
+    .act-banner-row{display:flex;justify-content:space-between;font-size:.76rem;margin-bottom:.22rem}
+    .act-banner-row:last-child{margin-bottom:0}
+    .act-banner-row span:first-child{color:var(--muted)}
+    .act-banner-row span:last-child{font-family:'JetBrains Mono',monospace;color:var(--text);font-weight:500}
+
+    .decline-banner{background:var(--error-bg);border:1px solid var(--error-border);border-radius:10px;padding:1rem 1.2rem;margin-bottom:1rem;text-align:left}
+    .decline-banner-title{font-size:.78rem;font-weight:700;color:var(--error);margin-bottom:.5rem}
+    .decline-banner-msg{font-size:.8rem;color:#7f1d1d;line-height:1.65}
+
+    /* ── Countdown widget ── */
+    .countdown-wrap{background:var(--white);border:1.5px solid var(--border);border-radius:14px;padding:1.3rem 1.4rem;margin-bottom:1rem;text-align:center}
+    .countdown-wrap.active-sub{border-color:var(--success-border);background:var(--success-bg)}
+    .countdown-wrap.expiring-sub{border-color:var(--warn-border);background:var(--warn-bg)}
+    .countdown-wrap.expired-sub{border-color:var(--error-border);background:var(--error-bg)}
+    .cd-label{font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.8rem}
+    .countdown-wrap.active-sub .cd-label{color:var(--success)}
+    .countdown-wrap.expiring-sub .cd-label{color:var(--warn)}
+    .countdown-wrap.expired-sub .cd-label{color:var(--error)}
+    .cd-tiles{display:flex;justify-content:center;gap:.5rem;margin-bottom:.9rem}
+    .cd-tile{display:flex;flex-direction:column;align-items:center;min-width:52px}
+    .cd-num{font-size:1.7rem;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--text);line-height:1}
+    .countdown-wrap.expiring-sub .cd-num{color:var(--warn)}
+    .countdown-wrap.expired-sub .cd-num{color:var(--error)}
+    .cd-unit{font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-top:.3rem;font-weight:600}
+    .cd-sep{font-size:1.4rem;font-weight:700;color:var(--muted2);align-self:flex-start;margin-top:.1rem}
+    .cd-bar-wrap{margin-bottom:.7rem}
+    .cd-bar{height:7px;background:rgba(0,0,0,.08);border-radius:4px;overflow:hidden}
+    .cd-bar-fill{height:100%;border-radius:4px;transition:width .5s ease}
+    .active-sub .cd-bar-fill{background:var(--success)}
+    .expiring-sub .cd-bar-fill{background:var(--warn)}
+    .expired-sub .cd-bar-fill{background:var(--error)}
+    .cd-date{font-size:.72rem;color:var(--muted);font-family:'JetBrains Mono',monospace}
+    .cd-expired-msg{font-size:.85rem;font-weight:600;color:var(--error);margin-bottom:.5rem}
+    .cd-expired-sub{font-size:.78rem;color:var(--muted);line-height:1.6}
+    .cd-expired-sub a{color:var(--error);font-weight:600}
+
+    /* ── Timeline ── */
+    .timeline{display:flex;flex-direction:column;text-align:left;margin-top:.6rem}
+    .tl-item{display:flex;gap:.7rem;align-items:flex-start;position:relative}
+    .tl-item:not(:last-child)::after{content:'';position:absolute;left:9px;top:20px;width:1px;height:calc(100% + 2px);background:var(--border)}
+    .tl-dot{width:20px;height:20px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.62rem;font-weight:700;margin-top:1px;position:relative;z-index:1}
+    .tl-dot.done{background:var(--success-bg);border:1.5px solid var(--success-border);color:var(--success)}
+    .tl-dot.spin{background:var(--blue-light);border:1.5px solid var(--blue-mid);color:var(--blue)}
+    .tl-dot.wait{background:#f8fafc;border:1.5px solid var(--border);color:var(--muted2)}
+    .tl-body{padding:.05rem 0 1rem}
+    .tl-title{font-size:.8rem;font-weight:600;color:var(--text);margin-bottom:.06rem}
+    .tl-title.dim{color:var(--muted)}
+    .tl-sub{font-size:.71rem;color:var(--muted)}
+
+    /* ── Steps / check-pro ── */
+    .check-pro{background:#f8faff;border:1px solid var(--blue-mid);border-radius:11px;padding:1rem 1.15rem;margin-bottom:1rem;text-align:left}
+    .check-pro.gpt-check{background:var(--gpt-bg);border-color:var(--gpt-border)}
+    .check-pro-title{font-size:.76rem;font-weight:700;color:var(--text);margin-bottom:.6rem;display:flex;align-items:center;gap:.4rem}
+    .cp-step{display:flex;align-items:flex-start;gap:.6rem;font-size:.77rem;color:var(--muted);line-height:1.5;margin-bottom:.35rem}
+    .cp-step:last-child{margin-bottom:0}
+    .cp-num{width:20px;height:20px;border-radius:50%;background:var(--blue-light);border:1.5px solid var(--blue-mid);color:var(--blue);font-size:.63rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+    .cp-num.gpt{background:var(--gpt-bg);border-color:var(--gpt-border);color:var(--gpt)}
+
+    /* ── Post-activation section ── */
+    .post-section{background:linear-gradient(135deg,#f8faff 0%,#eff6ff 100%);border:1.5px solid var(--blue-mid);border-radius:12px;padding:1.2rem 1.3rem;margin-bottom:1rem;text-align:left}
+    .post-section.gpt-post{background:linear-gradient(135deg,var(--gpt-bg) 0%,#ecfdf5 100%);border-color:var(--gpt-border)}
+    .post-section-header{display:flex;align-items:center;gap:.5rem;margin-bottom:.7rem}
+    .post-section-icon{font-size:1.1rem}
+    .post-section-title{font-size:.82rem;font-weight:700;color:var(--text)}
+    .post-section-sub{font-size:.78rem;color:var(--muted);margin-bottom:.8rem;line-height:1.6}
+
+    .confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:9999;display:none}
+    .confetti.on{display:block}
+    .flower{position:absolute;top:-80px;font-size:1.4rem;animation:flowerFall linear forwards;transform-origin:center center;user-select:none;pointer-events:none}
+
+    @keyframes flowerFall{
+      0%  {transform:translateY(0) rotate(0deg) scale(1);   opacity:0}
+      8%  {opacity:1}
+      85% {opacity:1}
+      100%{transform:translateY(110vh) rotate(var(--rot)) scale(var(--sc)); opacity:0}
+    }
+
+    .footer{text-align:center;margin-top:1.5rem;font-size:.7rem;color:var(--muted2)}
+    .footer a{color:var(--muted2);text-decoration:none}
+    .footer a:hover{color:var(--blue)}
+
+    @keyframes fadeDown{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:none}}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+    @keyframes slideIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+    @keyframes orbit1{to{transform:rotate(360deg)}}
+    @keyframes orbit2{to{transform:rotate(360deg)}}
+    @keyframes drawC{to{stroke-dashoffset:0}}
+    @keyframes drawK{to{stroke-dashoffset:0}}
+    @keyframes barPulse{0%,100%{opacity:.3;transform:scaleY(.6)}50%{opacity:1;transform:scaleY(1)}}
+    @keyframes cfloat{0%{opacity:1;transform:translateY(0) rotate(0deg)}100%{opacity:0;transform:translateY(-140px) rotate(720deg)}}
+
+    /* ── Secure Link Splash ─────────────────────────────────────────────────── */
+    #secure-splash{
+      position:fixed;inset:0;z-index:9999;
+      background:var(--bg);
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      padding:2rem;
+      transition:opacity .5s ease, visibility .5s ease;
+    }
+    #secure-splash.hidden{opacity:0;visibility:hidden;pointer-events:none}
+
+    .ssl-shield{
+      width:72px;height:72px;margin-bottom:1.6rem;
+      display:flex;align-items:center;justify-content:center;
+      position:relative;
+    }
+    .ssl-shield-ring{
+      width:72px;height:72px;border-radius:50%;
+      border:2px solid var(--blue-mid);
+      position:absolute;
+      animation:shieldPing 2.4s ease-out infinite;
+      opacity:0;
+    }
+    .ssl-shield-ring:nth-child(2){animation-delay:.6s}
+    .ssl-shield-icon{
+      width:52px;height:52px;background:var(--white);border-radius:50%;
+      border:2px solid var(--blue-mid);
+      display:flex;align-items:center;justify-content:center;
+      position:relative;z-index:1;
+      box-shadow:0 4px 16px rgba(37,99,235,.15);
+      transition:border-color .4s,box-shadow .4s;
+    }
+    .ssl-shield-icon.success{
+      border-color:var(--success-border);
+      box-shadow:0 4px 16px rgba(22,163,74,.18);
+    }
+    .ssl-shield-icon svg{width:26px;height:26px}
+
+    .ssl-title{
+      font-size:1.05rem;font-weight:700;color:var(--text);
+      letter-spacing:-.02em;margin-bottom:.35rem;text-align:center;
+      transition:color .3s;
+    }
+    .ssl-title.success{color:var(--success)}
+
+    .ssl-sub{
+      font-size:.8rem;color:var(--muted);margin-bottom:1.8rem;
+      text-align:center;line-height:1.55;max-width:300px;
+      transition:opacity .3s;
+    }
+
+    .ssl-bar-wrap{width:100%;max-width:300px;margin-bottom:1.6rem}
+    .ssl-bar-track{height:4px;background:var(--blue-mid);border-radius:3px;overflow:hidden}
+    .ssl-bar-fill{
+      height:100%;width:0%;border-radius:3px;
+      background:var(--blue);
+      transition:width .22s ease, background .4s;
+    }
+    .ssl-bar-fill.success{background:var(--success)}
+    .ssl-bar-pct{
+      font-size:.68rem;font-family:'JetBrains Mono',monospace;
+      color:var(--muted);margin-top:.45rem;text-align:right;
+      transition:color .3s;
+    }
+    .ssl-bar-pct.success{color:var(--success)}
+
+    .ssl-checks{display:flex;flex-direction:column;gap:.5rem;width:100%;max-width:300px}
+    .ssl-check{
+      display:flex;align-items:center;gap:.65rem;
+      font-size:.76rem;color:var(--muted2);
+      transition:color .3s;
+    }
+    .ssl-check.active{color:var(--muted)}
+    .ssl-check.done{color:var(--success)}
+    .ssl-check-dot{
+      width:16px;height:16px;border-radius:50%;flex-shrink:0;
+      border:1.5px solid var(--border);
+      display:flex;align-items:center;justify-content:center;
+      font-size:.58rem;font-weight:700;
+      transition:all .3s;
+    }
+    .ssl-check.active .ssl-check-dot{
+      border-color:var(--blue);background:var(--blue-light);
+      color:var(--blue);
+      animation:dotSpin .8s linear infinite;
+    }
+    .ssl-check.done .ssl-check-dot{
+      border-color:var(--success-border);
+      background:var(--success-bg);
+      color:var(--success);
+      animation:none;
+    }
+    @keyframes shieldPing{0%{opacity:.5;transform:scale(1)}100%{opacity:0;transform:scale(1.55)}}
+    @keyframes dotSpin{to{transform:rotate(360deg)}}
+
+    /* ── Language toggle ──────────────────────────────────────────────────────── */
+    .lang-bar{
+      display:flex;align-items:center;justify-content:center;gap:.35rem;
+      margin-bottom:1.2rem;flex-wrap:wrap;
+    }
+    .lang-btn{
+      display:inline-flex;align-items:center;gap:.4rem;
+      padding:.28rem .7rem;border-radius:99px;
+      font-size:.7rem;font-weight:600;cursor:pointer;
+      border:1.5px solid var(--border);background:transparent;
+      color:var(--muted);font-family:'Inter',sans-serif;
+      transition:all .18s;white-space:nowrap;
+    }
+    .lang-btn:hover{border-color:var(--border2,#cbd5e1);color:var(--text);background:#f8fafc}
+    .lang-btn.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+    .lang-flag{font-size:.85rem;line-height:1}
+    /* RTL support for Arabic */
+    html[dir="rtl"] .wrap{direction:rtl}
+    html[dir="rtl"] .input-icon{left:auto;right:.85rem}
+    html[dir="rtl"] .input-wrap input,html[dir="rtl"] .input-wrap textarea{padding-left:1rem;padding-right:2.7rem}
+    html[dir="rtl"] .input-icon.top{left:auto;right:.85rem;transform:none}
+    html[dir="rtl"] .instructions ol{padding-left:0;padding-right:1.3rem}
+    html[dir="rtl"] .btn-submit{letter-spacing:0}
+    html[dir="rtl"] .field-hint,html[dir="rtl"] .field-error{text-align:right}
+  </style>
+</head>
+<body id="page-body">
+
+<!-- ── Full-viewport flower rain overlay ──────────────────────────────────── -->
+<div class="confetti" id="confetti" aria-hidden="true"></div>
+
+<!-- ── Secure Link Splash ───────────────────────────────────────────────── -->
+<div id="secure-splash">
+  <div class="ssl-shield">
+    <div class="ssl-shield-ring"></div>
+    <div class="ssl-shield-ring"></div>
+    <div class="ssl-shield-icon" id="ssl-icon">
+      <!-- Lock icon (default) -->
+      <svg id="ssl-icon-lock" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="5" y="11" width="14" height="11" rx="2"/>
+        <path d="M8 11V7a4 4 0 0 1 8 0v4"/>
+        <circle cx="12" cy="16" r="1.2" fill="#2563eb" stroke="none"/>
+      </svg>
+      <!-- Check icon (shown on success) -->
+      <svg id="ssl-icon-check" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+        <polyline points="4,13 9,18 20,7"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="ssl-title" id="ssl-title">Establishing Secure Connection</div>
+  <div class="ssl-sub" id="ssl-sub">Verifying your link and setting up<br>an encrypted session with DTC servers.</div>
+
+  <div class="ssl-bar-wrap">
+    <div class="ssl-bar-track">
+      <div class="ssl-bar-fill" id="ssl-bar"></div>
+    </div>
+    <div class="ssl-bar-pct" id="ssl-pct">0%</div>
+  </div>
+
+  <div class="ssl-checks">
+    <div class="ssl-check" id="chk-ssl">
+      <div class="ssl-check-dot" id="dot-ssl">·</div>
+      <span>Initiating SSL/TLS encryption</span>
+    </div>
+    <div class="ssl-check" id="chk-cert">
+      <div class="ssl-check-dot" id="dot-cert">·</div>
+      <span>Verifying server certificate</span>
+    </div>
+    <div class="ssl-check" id="chk-token">
+      <div class="ssl-check-dot" id="dot-token">·</div>
+      <span>Authenticating link token</span>
+    </div>
+    <div class="ssl-check" id="chk-ready">
+      <div class="ssl-check-dot" id="dot-ready">·</div>
+      <span>Preparing secure form</span>
+    </div>
+  </div>
+</div>
+
+<!-- Notification banner -->
+<div id="notif-banner">
+  <div class="notif-inner" id="notif-inner">
+    <span class="notif-icon" id="notif-icon">ℹ</span>
+    <span id="notif-text"></span>
+    <button class="notif-close" onclick="document.getElementById('notif-banner').style.display='none'" title="Dismiss">✕</button>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="brand">
+    <div class="brand-logo">
+      <div class="brand-icon" id="brand-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+        </svg>
+      </div>
+      <div class="brand-name">DTC</div>
+    </div>
+    <div class="brand-tagline">Digital Tools Corner</div>
+    <div class="brand-sub" id="brand-sub">Activation Portal</div>
+  </div>
+
+  <!-- Language toggle -->
+  <div class="lang-bar" id="lang-bar">
+    <button class="lang-btn active" onclick="setLang('en')"><span class="lang-flag">🇬🇧</span> English</button>
+    <button class="lang-btn" onclick="setLang('zh')"><span class="lang-flag">🇨🇳</span> 中文</button>
+    <button class="lang-btn" onclick="setLang('ar')"><span class="lang-flag">🇸🇦</span> العربية</button>
+    <button class="lang-btn" onclick="setLang('es')"><span class="lang-flag">🇪🇸</span> Español</button>
+  </div>
+
+  <div class="card" id="main-card">
+    <!-- flower rain overlay lives at body level (see below) -->
+
+    <!-- Loading -->
+    <div id="screen-loading" class="screen active">
+      <div class="mini-loader"></div>
+      <p style="color:var(--muted);font-size:.83rem;margin-top:.5rem" data-i18n="verifying">Verifying your activation link…</p>
+    </div>
+
+    <!-- Invalid -->
+    <div id="screen-invalid" class="screen">
+      <div class="state-icon si-error">⚠</div>
+      <div class="state-title" data-i18n="linkUnavailable">Link Unavailable</div>
+      <p class="state-sub" id="invalid-msg">This activation link is invalid or has expired.</p>
+    </div>
+
+    <!-- Declined -->
+    <div id="screen-declined" class="screen">
+      <div class="state-icon si-error">✕</div>
+      <div class="state-title" data-i18n="declined">Request Declined</div>
+      <p class="state-sub" data-i18n="declinedSub">Your activation request could not be processed.</p>
+      <div class="decline-banner">
+        <div class="decline-banner-title" data-i18n="declinedBy">⚠ Declined by DTC System</div>
+        <div class="decline-banner-msg" id="decline-reason-msg">Please contact support.</div>
+      </div>
+    </div>
+
+    <!-- Form -->
+    <div id="screen-form" class="screen">
+      <div class="service-badge" id="svc-badge"><div class="badge-dot"></div><span id="pkg-label">Pro</span></div>
+      <div class="card-title" id="form-title" data-i18n="formTitle">Activate Your Package</div>
+      <p class="card-sub">
+        <span data-i18n="hello">Hello</span> <strong id="cust-name">there</strong>!
+        <span data-i18n="formSubtitle"> Please provide your details below.</span>
+      </p>
+
+      <!-- Claude instructions -->
+      <div class="instructions" id="claude-instructions">
+        <strong data-i18n="claudeInstrTitle">📋 How to find your Organization ID</strong>
+        <ol>
+          <li><span data-i18n="claudeStep1">Open</span> <span>claude.ai</span> <span data-i18n="claudeStep1b">and sign in.</span></li>
+          <li><span data-i18n="claudeStep2">Click your</span> <span>profile icon</span> → <span>Settings</span> → <span>Account</span>.</li>
+          <li data-i18n="claudeStep3">Copy the Organization ID shown in this format:</li>
+        </ol>
+        <div class="example"><span>714fe120-d7yd-4da9-bb53-84c42f10wac7</span></div>
+      </div>
+
+      <!-- ChatGPT instructions -->
+      <div class="instructions gpt-instr" id="gpt-instructions" style="display:none">
+        <strong data-i18n="gptInstrTitle">📋 How to get your ChatGPT session data</strong>
+        <ol>
+          <li><span data-i18n="gptStep1">Sign in to</span> <span>ChatGPT</span> <span data-i18n="gptStep1b">at chatgpt.com.</span></li>
+          <li><span data-i18n="gptStep2">In the</span> <strong data-i18n="sameBrowser">same browser</strong><span data-i18n="gptStep2b">, open a new tab and go to:</span></li>
+        </ol>
+        <div class="example gpt-ex" style="margin-top:.5rem"><span>https://chatgpt.com/api/auth/session</span></div>
+        <ol style="margin-top:.6rem" start="3">
+          <li data-i18n="gptStep3">Select all the text on the page and copy it.</li>
+          <li data-i18n="gptStep4">Paste it in the field below.</li>
+        </ol>
+        <div class="gpt-notice">
+          <strong style="color:var(--text)" data-i18n="gptReq">⚠ Requirements:</strong>
+          <span data-i18n="gptReqSub">Your account must have</span>
+          <code style="background:var(--gpt-bg);padding:.1rem .3rem;border-radius:4px;color:var(--gpt)">"planType":"free"</code>
+          <span data-i18n="gptReqAnd">and</span>
+          <code style="background:var(--gpt-bg);padding:.1rem .3rem;border-radius:4px;color:var(--gpt)">"structure":"personal"</code>.
+        </div>
+      </div>
+
+      <!-- Org ID (Claude) -->
+      <div class="form-group" id="field-orgid">
+        <label data-i18n="orgIdLabel">Organization ID</label>
+        <div class="input-wrap">
+          <span class="input-icon">#</span>
+          <input type="text" id="org-id" data-i18n-placeholder="orgIdPlaceholder"
+            placeholder="e.g. 714fe120-d7yd-4da9-bb53-84c42f10wac7"
+            oninput="validateOrgId()" autocomplete="off" spellcheck="false" maxlength="36"/>
+        </div>
+        <div class="field-hint" data-i18n="orgIdHint">Format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</div>
+        <div class="field-error" id="err-orgid"></div>
+      </div>
+
+      <!-- Session data (ChatGPT) -->
+      <div class="form-group" id="field-session" style="display:none">
+        <label data-i18n="sessionLabel">ChatGPT Session Data</label>
+        <div class="input-wrap">
+          <span class="input-icon top">{ }</span>
+          <textarea id="session-data" data-i18n-placeholder="sessionPlaceholder"
+            placeholder="Paste the full JSON from the session URL here…"
+            oninput="validateSession()" spellcheck="false" style="padding-left:2.7rem"></textarea>
+        </div>
+        <div class="field-hint" data-i18n="sessionHint">Copy all text from https://chatgpt.com/api/auth/session</div>
+        <div class="field-error" id="err-session"></div>
+      </div>
+
+      <div class="form-group">
+        <label data-i18n="wechatLabel">WeChat ID</label>
+        <div class="input-wrap">
+          <span class="input-icon">💬</span>
+          <input type="text" id="wechat" data-i18n-placeholder="wechatPlaceholder"
+            placeholder="Your WeChat ID" oninput="validateWechat()"/>
+        </div>
+        <div class="field-error" id="err-wechat"></div>
+      </div>
+
+      <div class="form-group">
+        <label data-i18n="emailLabel">Email Address</label>
+        <div class="input-wrap">
+          <span class="input-icon">✉</span>
+          <input type="email" id="email" data-i18n-placeholder="emailPlaceholder"
+            placeholder="you@example.com" oninput="validateEmail()"/>
+        </div>
+        <div class="field-error" id="err-email"></div>
+      </div>
+
+      <div class="divider"></div>
+      <button class="btn-submit" id="submit-btn" disabled onclick="handleSubmit()">
+        <span class="btn-text" data-i18n="submitBtn">Submit Details →</span>
+        <div class="spinner"></div>
+      </button>
+    </div>
+
+    <!-- Processing -->
+    <div id="screen-processing" class="screen">
+      <div class="orbit" id="proc-orbit">
+        <div class="orbit-ring r1"></div><div class="orbit-ring r2"></div>
+        <div class="orbit-center">⚡</div>
+      </div>
+      <div class="state-title" data-i18n="processingTitle">Setting Up Your Account</div>
+      <p class="state-sub" id="proc-msg" data-i18n="processingMsg">Your details have been received and are being reviewed.</p>
+      <div class="pulse-bars" id="pulse-bars">
+        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+      </div>
+      <div class="order-card">
+        <div class="oc-row"><span class="oc-label" data-i18n="package">Package</span><span class="oc-value" id="proc-pkg">—</span></div>
+        <div class="oc-row"><span class="oc-label" data-i18n="data">Data</span><span class="oc-value" id="proc-data">—</span></div>
+        <div class="oc-row"><span class="oc-label" data-i18n="status">Status</span><span class="pill pill-proc"><span class="pd"></span><span data-i18n="underReview">Under Review</span></span></div>
+      </div>
+      <div class="timeline">
+        <div class="tl-item"><div class="tl-dot done">✓</div><div class="tl-body"><div class="tl-title" data-i18n="tlSubmitted">Details Submitted</div><div class="tl-sub" data-i18n="tlSubmittedSub">Your information has been received.</div></div></div>
+        <div class="tl-item"><div class="tl-dot spin" id="tl2-dot">◎</div><div class="tl-body"><div class="tl-title" id="tl2-title" data-i18n="tlReview">Under Review</div><div class="tl-sub" id="tl2-sub" data-i18n="tlReviewSub">Our system is verifying your account.</div></div></div>
+        <div class="tl-item"><div class="tl-dot wait" id="tl3-dot">○</div><div class="tl-body"><div class="tl-title dim" id="tl3-title" data-i18n="tlPending">Activation Pending</div><div class="tl-sub" id="tl3-sub" data-i18n="tlPendingSub">Your package will be activated after verification.</div></div></div>
+      </div>
+    </div>
+
+    <!-- Activated -->
+    <div id="screen-activated" class="screen">
+      <svg class="check-ring" viewBox="0 0 80 80" fill="none">
+        <circle cx="40" cy="40" r="35" stroke="#16a34a" stroke-width="2"/>
+        <polyline points="24,40 34,52 56,28" stroke="#16a34a" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div class="state-title" id="act-title" data-i18n="activated">Package Activated!</div>
+      <p class="state-sub" id="act-sub" data-i18n="activatedSub">Your package is live and ready. Welcome aboard!</p>
+
+      <!-- Activation confirmation -->
+      <div class="act-banner">
+        <div class="act-banner-label" data-i18n="activationConfirmed">✓ Activation Confirmed</div>
+        <div class="act-banner-row"><span data-i18n="date">Date</span><span id="act-date">—</span></div>
+        <div class="act-banner-row"><span data-i18n="time">Time</span><span id="act-time">—</span></div>
+        <div class="act-banner-row" id="act-expiry-row" style="display:none"><span data-i18n="validUntil">Valid Until</span><span id="act-expiry-date" style="color:var(--success)">—</span></div>
+      </div>
+
+      <!-- Order summary -->
+      <div class="order-card">
+        <div class="oc-row"><span class="oc-label" data-i18n="package">Package</span><span class="oc-value" id="act-pkg">—</span></div>
+        <div class="oc-row" id="act-data-row"><span class="oc-label" data-i18n="orgId">Organization ID</span><span class="oc-value" id="act-data">—</span></div>
+        <div class="oc-row"><span class="oc-label" data-i18n="wechatLabel">WeChat</span><span class="oc-value" id="act-wechat">—</span></div>
+        <div class="oc-row"><span class="oc-label" data-i18n="emailLabel">Email</span><span class="oc-value" id="act-email">—</span></div>
+        <div class="oc-row"><span class="oc-label" data-i18n="status">Status</span><span class="pill pill-active">✓ <span data-i18n="active">Active</span></span></div>
+      </div>
+
+      <!-- Credentials (shown only for credential-mode products) -->
+      <div id="creds-box" style="display:none;background:linear-gradient(135deg,#fdf4ff,#f5f3ff);border:1.5px solid #c4b5fd;border-radius:12px;padding:1.1rem 1.2rem;margin-bottom:1rem;text-align:left">
+        <div style="font-size:.67rem;text-transform:uppercase;letter-spacing:.1em;font-weight:700;color:#7c3aed;margin-bottom:.6rem">🔑 Your Login Details</div>
+        <pre id="creds-content" style="font-family:'JetBrains Mono',monospace;font-size:.78rem;color:#3b0764;white-space:pre-wrap;word-break:break-all;line-height:1.7;margin:0"></pre>
+        <div style="display:flex;gap:.5rem;margin-top:.7rem;flex-wrap:wrap">
+          <button onclick="navigator.clipboard.writeText(document.getElementById('creds-content').textContent).then(()=>{this.textContent='Copied ✓';setTimeout(()=>this.textContent='Copy Login Details',2000)})" style="background:#7c3aed;color:#fff;border:none;border-radius:7px;padding:.4rem 1rem;font-family:'Inter',sans-serif;font-size:.75rem;font-weight:600;cursor:pointer">Copy Login Details</button>
+          <a id="access-link-btn" href="#" target="_blank" style="display:none;background:#2563eb;color:#fff;border-radius:7px;padding:.4rem 1rem;font-family:'Inter',sans-serif;font-size:.75rem;font-weight:600;text-decoration:none">🔗 Open Access Link</a>
+        </div>
+      </div>
+
+      <!-- Live countdown -->
+      <div id="countdown-wrap" class="countdown-wrap" style="display:none">
+        <div class="cd-label" id="cd-label">Subscription Active</div>
+        <div class="cd-tiles">
+          <div class="cd-tile"><div class="cd-num" id="cd-days">0</div><div class="cd-unit">Days</div></div>
+          <div class="cd-sep">:</div>
+          <div class="cd-tile"><div class="cd-num" id="cd-hours">00</div><div class="cd-unit">Hours</div></div>
+          <div class="cd-sep">:</div>
+          <div class="cd-tile"><div class="cd-num" id="cd-mins">00</div><div class="cd-unit">Mins</div></div>
+          <div class="cd-sep">:</div>
+          <div class="cd-tile"><div class="cd-num" id="cd-secs">00</div><div class="cd-unit">Secs</div></div>
+        </div>
+        <div class="cd-bar-wrap">
+          <div class="cd-bar"><div class="cd-bar-fill" id="cd-bar-fill" style="width:100%"></div></div>
+        </div>
+        <div class="cd-date" id="cd-date"></div>
+      </div>
+
+      <!-- Expired notice -->
+      <div id="expired-wrap" style="display:none" class="countdown-wrap expired-sub">
+        <div class="cd-expired-msg" data-i18n="expired">⏱ Your subscription has expired</div>
+        <div class="cd-expired-sub" data-i18n="expiredSub">
+          To renew your package, please contact DTC:<br>
+          <a href="mailto:dtc@dtc1.shop">dtc@dtc1.shop</a>
+        </div>
+      </div>
+
+      <!-- Pre-activation steps (how to verify) -->
+      <div class="check-pro" id="check-pro-steps">
+        <div class="check-pro-title" id="steps-title" data-i18n="stepsTitle">🔍 How to Verify Your Package is Active</div>
+        <div id="steps-content"></div>
+      </div>
+
+      <!-- Post-activation section -->
+      <div class="post-section" id="post-section" style="display:none">
+        <div class="post-section-header">
+          <span class="post-section-icon">🚀</span>
+          <span class="post-section-title" data-i18n="gettingStarted">Getting Started</span>
+        </div>
+        <div class="post-section-sub" id="post-text"></div>
+        <div id="post-steps-content"></div>
+      </div>
+
+      <p style="font-size:.75rem;color:var(--muted);line-height:1.65;text-align:center;margin-top:.5rem">
+        <span data-i18n="thankYou">Thank you for choosing DTC — Digital Tools Corner.</span><br>
+        <span data-i18n="contactUs">For assistance contact</span> <a href="mailto:dtc@dtc1.shop" style="color:var(--blue)">dtc@dtc1.shop</a> <span data-i18n="orWeChat">or reach us via WeChat.</span>
+      </p>
+    </div>
+
+  </div>
+  <div class="footer">DTC — Digital Tools Corner &nbsp;·&nbsp; <a href="mailto:dtc@dtc1.shop">dtc@dtc1.shop</a></div>
+</div>
+
+<script>
+  // ── Translations ─────────────────────────────────────────────────────────────
+  const LANGS = {
+    en: {
+      dir: 'ltr',
+      verifying: 'Verifying your activation link…',
+      linkUnavailable: 'Link Unavailable',
+      declined: 'Request Declined',
+      declinedSub: 'Your activation request could not be processed.',
+      declinedBy: '⚠ Declined by DTC System',
+      formTitle: 'Activate Your Package',
+      hello: 'Hello',
+      formSubtitle: ' Please provide your details below.',
+      claudeInstrTitle: '📋 How to find your Organization ID',
+      claudeStep1: 'Open', claudeStep1b: 'and sign in.',
+      claudeStep2: 'Click your', claudeStep3: 'Copy the Organization ID shown in this format:',
+      gptInstrTitle: '📋 How to get your ChatGPT session data',
+      gptStep1: 'Sign in to', gptStep1b: 'at chatgpt.com.',
+      gptStep2: 'In the', sameBrowser: 'same browser', gptStep2b: ', open a new tab and go to:',
+      gptStep3: 'Select all the text on the page and copy it.',
+      gptStep4: 'Paste it in the field below.',
+      gptReq: '⚠ Requirements:', gptReqSub: 'Your account must have', gptReqAnd: 'and',
+      orgIdLabel: 'Organization ID', orgIdPlaceholder: 'e.g. 714fe120-d7yd-4da9-bb53-84c42f10wac7',
+      orgIdHint: 'Format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
+      sessionLabel: 'ChatGPT Session Data', sessionPlaceholder: 'Paste the full JSON from the session URL here…',
+      sessionHint: 'Copy all text from https://chatgpt.com/api/auth/session',
+      wechatLabel: 'WeChat ID', wechatPlaceholder: 'Your WeChat ID',
+      emailLabel: 'Email Address', emailPlaceholder: 'you@example.com',
+      submitBtn: 'Submit Details →',
+      processingTitle: 'Setting Up Your Account',
+      processingMsg: 'Your details have been received and are being reviewed.',
+      package: 'Package', data: 'Data', status: 'Status', underReview: 'Under Review',
+      tlSubmitted: 'Details Submitted', tlSubmittedSub: 'Your information has been received.',
+      tlReview: 'Under Review', tlReviewSub: 'Our system is verifying your account.',
+      tlPending: 'Activation Pending', tlPendingSub: 'Your package will be activated after verification.',
+      activated: 'Package Activated!', activatedSub: 'Your package is live and ready. Welcome aboard!',
+      activationConfirmed: '✓ Activation Confirmed',
+      date: 'Date', time: 'Time', validUntil: 'Valid Until',
+      orgId: 'Organization ID', active: 'Active',
+      expired: '⏱ Your subscription has expired',
+      expiredSub: 'To renew your package, please contact DTC:<br><a href="mailto:dtc@dtc1.shop">dtc@dtc1.shop</a>',
+      stepsTitle: '🔍 How to Verify Your Package is Active',
+      gettingStarted: 'Getting Started',
+      thankYou: 'Thank you for choosing DTC — Digital Tools Corner.',
+      contactUs: 'For assistance contact', orWeChat: 'or reach us via WeChat.',
+      sslInit: 'Initiating SSL/TLS encryption',
+      sslCert: 'Verifying server certificate',
+      sslToken: 'Authenticating link token',
+      sslReady: 'Preparing secure form',
+      sslConnecting: 'Establishing Secure Connection',
+      sslConnectingSub: 'Verifying your link and setting up\nan encrypted session with DTC servers.',
+      sslDone: 'Secure Connection Established',
+      sslDoneSub: 'Your link is verified and encrypted. Loading your activation form…',
+    },
+    zh: {
+      dir: 'ltr',
+      verifying: '正在验证您的激活链接…',
+      linkUnavailable: '链接无效',
+      declined: '请求被拒绝',
+      declinedSub: '您的激活请求无法处理。',
+      declinedBy: '⚠ DTC 系统已拒绝',
+      formTitle: '激活您的套餐',
+      hello: '您好',
+      formSubtitle: '！请在下方填写您的信息。',
+      claudeInstrTitle: '📋 如何查找您的组织 ID',
+      claudeStep1: '打开', claudeStep1b: '并登录。',
+      claudeStep2: '点击您的', claudeStep3: '复制显示的组织 ID，格式如下：',
+      gptInstrTitle: '📋 如何获取您的 ChatGPT 会话数据',
+      gptStep1: '登录', gptStep1b: '（chatgpt.com）。',
+      gptStep2: '在', sameBrowser: '同一浏览器', gptStep2b: '中打开新标签页并访问：',
+      gptStep3: '选择页面上的所有文字并复制。',
+      gptStep4: '粘贴到下方输入框中。',
+      gptReq: '⚠ 要求：', gptReqSub: '您的账户必须包含', gptReqAnd: '以及',
+      orgIdLabel: '组织 ID', orgIdPlaceholder: '例如：714fe120-d7yd-4da9-bb53-84c42f10wac7',
+      orgIdHint: '格式：xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
+      sessionLabel: 'ChatGPT 会话数据', sessionPlaceholder: '请粘贴会话链接中的完整 JSON 内容…',
+      sessionHint: '复制 https://chatgpt.com/api/auth/session 页面中的全部内容',
+      wechatLabel: '微信 ID', wechatPlaceholder: '您的微信 ID',
+      emailLabel: '电子邮件', emailPlaceholder: 'you@example.com',
+      submitBtn: '提交信息 →',
+      processingTitle: '正在设置您的账户',
+      processingMsg: '您的信息已收到，正在审核中。',
+      package: '套餐', data: '数据', status: '状态', underReview: '审核中',
+      tlSubmitted: '信息已提交', tlSubmittedSub: '您的信息已成功接收。',
+      tlReview: '审核中', tlReviewSub: '系统正在验证您的账户。',
+      tlPending: '等待激活', tlPendingSub: '验证完成后将激活您的套餐。',
+      activated: '套餐已激活！', activatedSub: '您的套餐已上线，欢迎使用！',
+      activationConfirmed: '✓ 激活确认',
+      date: '日期', time: '时间', validUntil: '有效期至',
+      orgId: '组织 ID', active: '已激活',
+      expired: '⏱ 您的订阅已过期',
+      expiredSub: '如需续订，请联系 DTC：<br><a href="mailto:dtc@dtc1.shop">dtc@dtc1.shop</a>',
+      stepsTitle: '🔍 如何验证您的套餐已激活',
+      gettingStarted: '开始使用',
+      thankYou: '感谢您选择 DTC — 数字工具角。',
+      contactUs: '如需帮助，请联系', orWeChat: '或通过微信联系我们。',
+      sslInit: '正在初始化 SSL/TLS 加密',
+      sslCert: '正在验证服务器证书',
+      sslToken: '正在验证链接令牌',
+      sslReady: '正在准备安全表单',
+      sslConnecting: '正在建立安全连接',
+      sslConnectingSub: '正在验证您的链接并与 DTC 服务器\n建立加密会话。',
+      sslDone: '安全连接已建立',
+      sslDoneSub: '您的链接已通过验证并加密。正在加载激活表单…',
+    },
+    ar: {
+      dir: 'rtl',
+      verifying: 'جارٍ التحقق من رابط التفعيل…',
+      linkUnavailable: 'الرابط غير متاح',
+      declined: 'تم رفض الطلب',
+      declinedSub: 'تعذّر معالجة طلب التفعيل الخاص بك.',
+      declinedBy: '⚠ مرفوض من نظام DTC',
+      formTitle: 'فعّل اشتراكك',
+      hello: 'مرحباً',
+      formSubtitle: '! يرجى إدخال بياناتك أدناه.',
+      claudeInstrTitle: '📋 كيفية العثور على معرّف المؤسسة',
+      claudeStep1: 'افتح', claudeStep1b: 'وسجّل الدخول.',
+      claudeStep2: 'انقر على', claudeStep3: 'انسخ معرّف المؤسسة بالتنسيق التالي:',
+      gptInstrTitle: '📋 كيفية الحصول على بيانات جلسة ChatGPT',
+      gptStep1: 'سجّل الدخول إلى', gptStep1b: 'على chatgpt.com.',
+      gptStep2: 'في', sameBrowser: 'نفس المتصفح', gptStep2b: '، افتح علامة تبويب جديدة واذهب إلى:',
+      gptStep3: 'حدّد كل النص في الصفحة وانسخه.',
+      gptStep4: 'الصق النص في الحقل أدناه.',
+      gptReq: '⚠ المتطلبات:', gptReqSub: 'يجب أن يحتوي حسابك على', gptReqAnd: 'و',
+      orgIdLabel: 'معرّف المؤسسة', orgIdPlaceholder: 'مثال: 714fe120-d7yd-4da9-bb53-84c42f10wac7',
+      orgIdHint: 'التنسيق: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
+      sessionLabel: 'بيانات جلسة ChatGPT', sessionPlaceholder: 'الصق محتوى JSON الكامل من رابط الجلسة هنا…',
+      sessionHint: 'انسخ كل النص من https://chatgpt.com/api/auth/session',
+      wechatLabel: 'معرّف WeChat', wechatPlaceholder: 'معرّف WeChat الخاص بك',
+      emailLabel: 'البريد الإلكتروني', emailPlaceholder: 'you@example.com',
+      submitBtn: 'إرسال البيانات →',
+      processingTitle: 'جارٍ إعداد حسابك',
+      processingMsg: 'تم استلام بياناتك وهي قيد المراجعة.',
+      package: 'الباقة', data: 'البيانات', status: 'الحالة', underReview: 'قيد المراجعة',
+      tlSubmitted: 'تم إرسال البيانات', tlSubmittedSub: 'تم استلام معلوماتك بنجاح.',
+      tlReview: 'قيد المراجعة', tlReviewSub: 'يقوم النظام بالتحقق من حسابك.',
+      tlPending: 'في انتظار التفعيل', tlPendingSub: 'سيتم تفعيل باقتك بعد التحقق.',
+      activated: 'تم تفعيل الباقة!', activatedSub: 'باقتك نشطة وجاهزة. أهلاً بك!',
+      activationConfirmed: '✓ تم تأكيد التفعيل',
+      date: 'التاريخ', time: 'الوقت', validUntil: 'صالح حتى',
+      orgId: 'معرّف المؤسسة', active: 'نشط',
+      expired: '⏱ انتهت صلاحية اشتراكك',
+      expiredSub: 'للتجديد، يرجى التواصل مع DTC:<br><a href="mailto:dtc@dtc1.shop">dtc@dtc1.shop</a>',
+      stepsTitle: '🔍 كيفية التحقق من تفعيل باقتك',
+      gettingStarted: 'كيفية البدء',
+      thankYou: 'شكراً لاختيارك DTC — الزاوية الرقمية للأدوات.',
+      contactUs: 'للمساعدة، تواصل معنا على', orWeChat: 'أو عبر WeChat.',
+      sslInit: 'جارٍ تفعيل تشفير SSL/TLS',
+      sslCert: 'جارٍ التحقق من شهادة الخادم',
+      sslToken: 'جارٍ التحقق من رمز الرابط',
+      sslReady: 'جارٍ تحضير النموذج الآمن',
+      sslConnecting: 'جارٍ إنشاء اتصال آمن',
+      sslConnectingSub: 'جارٍ التحقق من رابطك وإنشاء\nجلسة مشفرة مع خوادم DTC.',
+      sslDone: 'تم إنشاء اتصال آمن',
+      sslDoneSub: 'تم التحقق من رابطك وتشفيره. جارٍ تحميل نموذج التفعيل…',
+    },
+    es: {
+      dir: 'ltr',
+      verifying: 'Verificando tu enlace de activación…',
+      linkUnavailable: 'Enlace no disponible',
+      declined: 'Solicitud rechazada',
+      declinedSub: 'Tu solicitud de activación no pudo procesarse.',
+      declinedBy: '⚠ Rechazado por el sistema DTC',
+      formTitle: 'Activa tu suscripción',
+      hello: 'Hola',
+      formSubtitle: '! Por favor ingresa tus datos a continuación.',
+      claudeInstrTitle: '📋 Cómo encontrar tu ID de organización',
+      claudeStep1: 'Abre', claudeStep1b: 'e inicia sesión.',
+      claudeStep2: 'Haz clic en tu', claudeStep3: 'Copia el ID de organización en este formato:',
+      gptInstrTitle: '📋 Cómo obtener los datos de sesión de ChatGPT',
+      gptStep1: 'Inicia sesión en', gptStep1b: 'en chatgpt.com.',
+      gptStep2: 'En el', sameBrowser: 'mismo navegador', gptStep2b: ', abre una nueva pestaña y ve a:',
+      gptStep3: 'Selecciona todo el texto de la página y cópialo.',
+      gptStep4: 'Pégalo en el campo de abajo.',
+      gptReq: '⚠ Requisitos:', gptReqSub: 'Tu cuenta debe tener', gptReqAnd: 'y',
+      orgIdLabel: 'ID de organización', orgIdPlaceholder: 'ej. 714fe120-d7yd-4da9-bb53-84c42f10wac7',
+      orgIdHint: 'Formato: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
+      sessionLabel: 'Datos de sesión de ChatGPT', sessionPlaceholder: 'Pega aquí el JSON completo de la URL de sesión…',
+      sessionHint: 'Copia todo el texto de https://chatgpt.com/api/auth/session',
+      wechatLabel: 'ID de WeChat', wechatPlaceholder: 'Tu ID de WeChat',
+      emailLabel: 'Correo electrónico', emailPlaceholder: 'tu@email.com',
+      submitBtn: 'Enviar datos →',
+      processingTitle: 'Configurando tu cuenta',
+      processingMsg: 'Tus datos han sido recibidos y están siendo revisados.',
+      package: 'Suscripción', data: 'Datos', status: 'Estado', underReview: 'En revisión',
+      tlSubmitted: 'Datos enviados', tlSubmittedSub: 'Tu información ha sido recibida.',
+      tlReview: 'En revisión', tlReviewSub: 'El sistema está verificando tu cuenta.',
+      tlPending: 'Activación pendiente', tlPendingSub: 'Tu suscripción se activará tras la verificación.',
+      activated: '¡Suscripción activada!', activatedSub: '¡Tu suscripción está activa y lista. Bienvenido!',
+      activationConfirmed: '✓ Activación confirmada',
+      date: 'Fecha', time: 'Hora', validUntil: 'Válido hasta',
+      orgId: 'ID de organización', active: 'Activo',
+      expired: '⏱ Tu suscripción ha expirado',
+      expiredSub: 'Para renovar tu suscripción, contacta a DTC:<br><a href="mailto:dtc@dtc1.shop">dtc@dtc1.shop</a>',
+      stepsTitle: '🔍 Cómo verificar que tu suscripción está activa',
+      gettingStarted: 'Cómo empezar',
+      thankYou: 'Gracias por elegir DTC — Digital Tools Corner.',
+      contactUs: 'Para ayuda, contáctanos en', orWeChat: 'o a través de WeChat.',
+      sslInit: 'Iniciando cifrado SSL/TLS',
+      sslCert: 'Verificando certificado del servidor',
+      sslToken: 'Autenticando token del enlace',
+      sslReady: 'Preparando formulario seguro',
+      sslConnecting: 'Estableciendo conexión segura',
+      sslConnectingSub: 'Verificando tu enlace y estableciendo\nuna sesión cifrada con los servidores de DTC.',
+      sslDone: 'Conexión segura establecida',
+      sslDoneSub: 'Tu enlace ha sido verificado y cifrado. Cargando tu formulario de activación…',
+    }
+  };
+
+  let currentLang = 'en';
+
+  function setLang(lang) {
+    if (!LANGS[lang]) return;
+    currentLang = lang;
+    const t = LANGS[lang];
+
+    // Set HTML dir for RTL
+    document.documentElement.dir = t.dir;
+    document.documentElement.lang = lang;
+
+    // Update lang buttons
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('onclick') === `setLang('${lang}')`);
+    });
+
+    // Apply all data-i18n text nodes
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      if (t[key] !== undefined) el.innerHTML = t[key];
+    });
+
+    // Apply placeholder translations
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+      const key = el.getAttribute('data-i18n-placeholder');
+      if (t[key] !== undefined) el.placeholder = t[key];
+    });
+
+    // Update SSL splash texts if still visible
+    const sslTitle = document.getElementById('ssl-title');
+    const sslSub   = document.getElementById('ssl-sub');
+    if (sslTitle && !document.getElementById('secure-splash').classList.contains('hidden')) {
+      sslTitle.textContent = t.sslConnecting;
+      sslSub.textContent   = t.sslConnectingSub;
+    }
+    // Update SSL check step labels
+    const checkLabels = document.querySelectorAll('.ssl-check span');
+    const sslKeys = ['sslInit','sslCert','sslToken','sslReady'];
+    checkLabels.forEach((el, i) => { if (sslKeys[i]) el.textContent = t[sslKeys[i]]; });
+
+    // Save preference
+    try { localStorage.setItem('dtc-lang', lang); } catch(e) {}
+  }
+
+  // Restore saved language on load
+  try {
+    const saved = localStorage.getItem('dtc-lang');
+    if (saved && LANGS[saved]) { currentLang = saved; }
+  } catch(e) {}
+</script>
+
+<script>
+  const UUID_REGEX  = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const linkToken   = new URLSearchParams(location.search).get('token');
+  let pollTimer     = null;
+  let countdownTimer= null;
+  let currentProduct= 'claude';
+  let state = {
+    orgId:'', sessionData:'', wechat:'', email:'',
+    packageType:'', product:'claude',
+    credentialsMode: false, loginDetails: '',
+    subscriptionExpiresAt: null, subscriptionDays: null,
+    approvedSteps:[], processingText:'', approvedText:'',
+    postApprovedText:'', postApprovedSteps:[]
+  };
+
+  // ── Notification banner ──────────────────────────────────────────────────
+  const showNotification = (notif) => {
+    if (!notif || !notif.message) return;
+    const icons = { info:'ℹ', success:'✓', warning:'⚠', error:'⚠' };
+    const classes= { info:'notif-info', success:'notif-success', warning:'notif-warning', error:'notif-error' };
+    const inner = document.getElementById('notif-inner');
+    inner.className = 'notif-inner ' + (classes[notif.type] || 'notif-info');
+    document.getElementById('notif-icon').textContent = icons[notif.type] || 'ℹ';
+    document.getElementById('notif-text').textContent = notif.message;
+    document.getElementById('notif-banner').style.display = 'block';
+  };
+
+  const show = (id) => {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  };
+
+  const setGptMode = (isGpt, credMode) => {
+    currentProduct = isGpt ? 'chatgpt' : 'claude';
+    document.body.classList.toggle('gpt-mode', isGpt);
+    document.getElementById('brand-icon').classList.toggle('gpt', isGpt);
+    document.getElementById('brand-sub').textContent = isGpt ? 'ChatGPT Plus Portal' : 'Claude Activation Portal';
+    document.getElementById('main-card').classList.toggle('gpt-card', isGpt);
+    const badge = document.getElementById('svc-badge');
+    badge.className = 'service-badge' + (isGpt ? ' gpt' : '');
+    // Credentials mode: hide all data-collection fields
+    const isCreds = credMode || state.credentialsMode;
+    document.getElementById('claude-instructions').style.display = (isCreds || isGpt) ? 'none' : '';
+    document.getElementById('gpt-instructions').style.display   = (!isCreds && isGpt) ? '' : 'none';
+    document.getElementById('field-orgid').style.display        = (isCreds || isGpt) ? 'none' : '';
+    document.getElementById('field-session').style.display      = (!isCreds && isGpt) ? '' : 'none';
+    document.getElementById('submit-btn').className = 'btn-submit' + (isGpt ? ' gpt-btn' : '');
+    document.getElementById('proc-orbit').className = 'orbit' + (isGpt ? ' gpt-orbit' : '');
+    document.querySelectorAll('.bar').forEach(b => b.classList.toggle('gpt-bar', isGpt));
+  };
+
+  // ── Countdown ────────────────────────────────────────────────────────────
+  const startCountdown = (expiresAt, totalDays) => {
+    const expDate  = new Date(expiresAt);
+    const wrapEl   = document.getElementById('countdown-wrap');
+    const expiredEl= document.getElementById('expired-wrap');
+    wrapEl.style.display = 'block';
+
+    const tick = () => {
+      const now     = new Date();
+      const msLeft  = expDate - now;
+
+      if (msLeft <= 0) {
+        // Expired
+        wrapEl.style.display    = 'none';
+        expiredEl.style.display = 'block';
+        clearInterval(countdownTimer);
+        return;
+      }
+
+      const totalMs  = (totalDays || 30) * 24 * 60 * 60 * 1000;
+      const pct      = Math.min(100, Math.max(0, (msLeft / totalMs) * 100));
+      const days     = Math.floor(msLeft / (1000*60*60*24));
+      const hours    = Math.floor((msLeft % (1000*60*60*24)) / (1000*60*60));
+      const mins     = Math.floor((msLeft % (1000*60*60)) / (1000*60));
+      const secs     = Math.floor((msLeft % (1000*60)) / 1000);
+
+      document.getElementById('cd-days').textContent  = days;
+      document.getElementById('cd-hours').textContent = String(hours).padStart(2,'0');
+      document.getElementById('cd-mins').textContent  = String(mins).padStart(2,'0');
+      document.getElementById('cd-secs').textContent  = String(secs).padStart(2,'0');
+      document.getElementById('cd-bar-fill').style.width = pct + '%';
+      document.getElementById('cd-date').textContent =
+        'Expires ' + expDate.toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
+
+      // Colour coding
+      const isExpiring = days <= 5;
+      wrapEl.className = 'countdown-wrap ' + (isExpiring ? 'expiring-sub' : 'active-sub');
+      document.getElementById('cd-label').textContent = isExpiring
+        ? '⚠ Expiring Soon — Renew Now'
+        : '✓ Subscription Active';
+    };
+
+    tick();
+    countdownTimer = setInterval(tick, 1000);
+  };
+
+  // ── Secure splash helpers ─────────────────────────────────────────────────
+  const setBar = (pct) => {
+    const bar = document.getElementById('ssl-bar');
+    const lbl = document.getElementById('ssl-pct');
+    if (bar) bar.style.width = pct + '%';
+    if (lbl) lbl.textContent = pct + '%';
+  };
+  const activateCheck = (id) => {
+    const el = document.getElementById('chk-' + id);
+    const dot = document.getElementById('dot-' + id);
+    if (!el) return;
+    el.classList.add('active');
+    if (dot) dot.textContent = '↻';
+  };
+  const completeCheck = (id) => {
+    const el = document.getElementById('chk-' + id);
+    const dot = document.getElementById('dot-' + id);
+    if (!el) return;
+    el.classList.remove('active');
+    el.classList.add('done');
+    if (dot) dot.textContent = '✓';
+  };
+  const dismissSplash = () => {
+    const splash = document.getElementById('secure-splash');
+    if (splash) splash.classList.add('hidden');
+  };
+  const wait = (ms) => new Promise(res => setTimeout(res, ms));
+
+  // ── Fetch & boot ─────────────────────────────────────────────────────────
+  window.addEventListener('DOMContentLoaded', async () => {
+    // Apply saved/detected language before anything renders
+    setLang(currentLang);
+
+    if (!linkToken) {
+      dismissSplash();
+      showInvalid('No activation link found.');
+      return;
+    }
+
+    // ── Animated secure handshake ──────────────────────────────────────────
+    activateCheck('ssl');
+    setBar(10);
+    await wait(520);
+    completeCheck('ssl');
+    setBar(28);
+
+    activateCheck('cert');
+    await wait(480);
+    completeCheck('cert');
+    setBar(52);
+
+    activateCheck('token');
+
+    // Fire real fetch in parallel with the token check animation
+    const fetchPromise = fetch(`/api/validate-token?token=${linkToken}`).then(r => r.json());
+
+    await wait(500);
+    completeCheck('token');
+    setBar(78);
+
+    activateCheck('ready');
+    await wait(380);
+    completeCheck('ready');
+    setBar(100);
+
+    // Switch to success state using current language
+    const t          = LANGS[currentLang] || LANGS.en;
+    const sslIcon    = document.getElementById('ssl-icon');
+    const lockIcon   = document.getElementById('ssl-icon-lock');
+    const checkIcon  = document.getElementById('ssl-icon-check');
+    const titleEl    = document.getElementById('ssl-title');
+    const subEl      = document.getElementById('ssl-sub');
+    const barEl      = document.getElementById('ssl-bar');
+    const pctEl      = document.getElementById('ssl-pct');
+    if (sslIcon)  sslIcon.classList.add('success');
+    if (lockIcon) lockIcon.style.display = 'none';
+    if (checkIcon)checkIcon.style.display = '';
+    if (titleEl)  { titleEl.classList.add('success'); titleEl.textContent = t.sslDone; }
+    if (subEl)    subEl.textContent = t.sslDoneSub;
+    if (barEl)    barEl.classList.add('success');
+    if (pctEl)    { pctEl.classList.add('success'); pctEl.textContent = '100%'; }
+
+    await wait(700);
+    dismissSplash();
+
+    // Now await the actual API response
+    try {
+      const d = await fetchPromise;
+
+      // Show notification if set
+      if (d.notification) showNotification(d.notification);
+
+      if (!d.valid) { showInvalid(d.error); return; }
+      if (d.declined) { showDeclined(d.declineReason); return; }
+
+      state.customerName        = d.customerName;
+      state.packageType         = d.packageType;
+      state.product             = d.product || 'claude';
+      state.processingText      = d.processingText || '';
+      state.approvedText        = d.approvedText || '';
+      state.approvedSteps       = d.approvedSteps || [];
+      state.postApprovedText    = d.postApprovedText || '';
+      state.postApprovedSteps   = d.postApprovedSteps || [];
+      state.subscriptionExpiresAt = d.subscriptionExpiresAt || null;
+      state.credentialsMode     = d.credentialsMode || false;
+      state.loginDetails        = d.loginDetails || '';
+      state.accessLink          = d.accessLink   || '';
+
+      const isGpt = state.product === 'chatgpt';
+      setGptMode(isGpt, state.credentialsMode);
+
+      if (d.submitted) {
+        state.orgId       = d.orgId;
+        state.sessionData = d.sessionData;
+        state.wechat      = d.wechat;
+        state.email       = d.email;
+        if (d.approved) showActivated(d.approvedAt, d.subscriptionExpiresAt);
+        else { showProcessing(); startPolling(); }
+      } else {
+        document.getElementById('cust-name').textContent = d.customerName;
+        document.getElementById('pkg-label').textContent = d.packageType;
+        show('screen-form');
+      }
+    } catch { showInvalid('Unable to verify your link. Please try again or contact support.'); }
+  });
+
+  const showInvalid = (msg) => { document.getElementById('invalid-msg').textContent = msg; show('screen-invalid'); };
+  const showDeclined = (reason) => {
+    document.getElementById('decline-reason-msg').textContent = reason || 'Please contact support.';
+    show('screen-declined');
+  };
+
+  // ── Validation ───────────────────────────────────────────────────────────
+  const validateOrgId = () => {
+    if (currentProduct !== 'claude') return;
+    const v = document.getElementById('org-id').value.trim();
+    const el = document.getElementById('org-id'), err = document.getElementById('err-orgid');
+    el.className = '';
+    if (!v) { err.classList.remove('show'); checkReady(); return; }
+    if (v.toLowerCase().startsWith('org-')) return setErr(el, err, 'Remove the "org-" prefix — enter only the UUID portion.');
+    if (v.split('-').length !== 5) return setErr(el, err, `Should have 5 dash-separated sections. (${v.split('-').length} found)`);
+    if (!UUID_REGEX.test(v)) return setErr(el, err, 'Contains invalid characters. Copy it directly from your account settings.');
+    el.classList.add('ok'); err.classList.remove('show'); checkReady();
+  };
+
+  const validateSession = () => {
+    if (currentProduct !== 'chatgpt') return;
+    const v = document.getElementById('session-data').value.trim();
+    const el = document.getElementById('session-data'), err = document.getElementById('err-session');
+    el.className = '';
+    if (!v) { err.classList.remove('show'); checkReady(); return; }
+    try {
+      const parsed   = JSON.parse(v);
+      const acct     = parsed.account || parsed;
+      const planType  = acct.planType  || parsed.planType;
+      const structure = acct.structure || parsed.structure;
+      if (!planType)             return setErr(el, err, 'Could not find planType. Make sure you copied the full JSON.');
+      if (planType !== 'free')   return setErr(el, err, `⚠ Package already active (planType: "${planType}"). This service can only be added to a free account.`);
+      if (structure !== 'personal') return setErr(el, err, `⚠ Team account detected (structure: "${structure}"). Switch to a personal profile, open the session URL again, and paste the new data.`);
+      el.classList.add('ok'); err.classList.remove('show'); checkReady();
+    } catch { setErr(el, err, 'Invalid JSON. Please copy the complete content from the session URL page.'); }
+  };
+
+  const validateWechat = () => {
+    const v = document.getElementById('wechat').value.trim();
+    const el = document.getElementById('wechat'), err = document.getElementById('err-wechat');
+    el.className = '';
+    if (!v) { err.classList.remove('show'); checkReady(); return; }
+    el.classList.add('ok'); err.classList.remove('show'); checkReady();
+  };
+
+  const validateEmail = () => {
+    const v = document.getElementById('email').value.trim();
+    const el = document.getElementById('email'), err = document.getElementById('err-email');
+    el.className = '';
+    if (!v) { err.classList.remove('show'); checkReady(); return; }
+    if (!EMAIL_REGEX.test(v)) return setErr(el, err, 'Please enter a valid email address.');
+    el.classList.add('ok'); err.classList.remove('show'); checkReady();
+  };
+
+  const setErr = (el, errEl, msg) => {
+    el.classList.add('err'); errEl.textContent = msg; errEl.classList.add('show');
+    document.getElementById('submit-btn').disabled = true;
+  };
+
+  const checkReady = () => {
+    const isGpt  = currentProduct === 'chatgpt';
+    const isCreds= state.credentialsMode;
+    let dataOk   = false;
+    if (isCreds) {
+      dataOk = true; // credentials-mode: no session/org needed
+    } else if (isGpt) {
+      try {
+        const p = JSON.parse(document.getElementById('session-data').value.trim());
+        const a = p.account || p;
+        dataOk = (a.planType || p.planType) === 'free' && (a.structure || p.structure) === 'personal';
+      } catch { dataOk = false; }
+    } else {
+      dataOk = UUID_REGEX.test(document.getElementById('org-id').value.trim());
+    }
+    document.getElementById('submit-btn').disabled = !(
+      dataOk &&
+      document.getElementById('wechat').value.trim().length > 0 &&
+      EMAIL_REGEX.test(document.getElementById('email').value.trim())
+    );
+  };
+
+  // ── Submit ───────────────────────────────────────────────────────────────
+  const handleSubmit = async () => {
+    const isGpt     = currentProduct === 'chatgpt';
+    const orgId     = isGpt ? '' : document.getElementById('org-id').value.trim();
+    const sessionData= isGpt ? document.getElementById('session-data').value.trim() : '';
+    const wechat    = document.getElementById('wechat').value.trim();
+    const email     = document.getElementById('email').value.trim();
+    const btn       = document.getElementById('submit-btn');
+    btn.classList.add('loading'); btn.disabled = true;
+    try {
+      const r = await fetch('/api/submit', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ token: linkToken, orgId, sessionData, wechat, email }) });
+      const d = await r.json();
+      if (d.success) {
+        state.orgId = orgId; state.sessionData = sessionData; state.wechat = wechat; state.email = email;
+        showProcessing(); startPolling();
+      } else {
+        if (d.errors) {
+          if (d.errors.orgId)       setErr(document.getElementById('org-id'),      document.getElementById('err-orgid'),  d.errors.orgId);
+          if (d.errors.sessionData) setErr(document.getElementById('session-data'),document.getElementById('err-session'),d.errors.sessionData);
+          if (d.errors.wechat)      setErr(document.getElementById('wechat'),       document.getElementById('err-wechat'), d.errors.wechat);
+          if (d.errors.email)       setErr(document.getElementById('email'),        document.getElementById('err-email'),  d.errors.email);
+        } else { alert(d.error || 'Submission failed. Please try again.'); }
+        btn.classList.remove('loading'); btn.disabled = false;
+      }
+    } catch {
+      alert('A network error occurred. Please check your connection and try again.');
+      btn.classList.remove('loading'); btn.disabled = false;
+    }
+  };
+
+  const showProcessing = () => {
+    const isGpt = currentProduct === 'chatgpt';
+    document.getElementById('proc-pkg').textContent  = state.packageType;
+    document.getElementById('proc-data').textContent = isGpt
+      ? (state.sessionData ? 'Session data received' : '—')
+      : (state.orgId ? state.orgId.slice(0,18)+'…' : '—');
+    if (state.processingText) document.querySelector('#screen-processing .state-sub').textContent = state.processingText;
+    show('screen-processing');
+  };
+
+  const startPolling = () => {
+    pollTimer = setInterval(async () => {
+      try {
+        const r = await fetch(`/api/status?token=${linkToken}`);
+        const d = await r.json();
+        if (d.notification) showNotification(d.notification);
+        if (d.processingText) document.querySelector('#screen-processing .state-sub').textContent = d.processingText;
+        if (d.status === 'activated') {
+          clearInterval(pollTimer);
+          Object.assign(state, {
+            orgId: d.orgId||state.orgId, sessionData: d.sessionData||state.sessionData,
+            wechat: d.wechat||state.wechat, email: d.email||state.email,
+            packageType: d.packageType||state.packageType,
+            subscriptionExpiresAt: d.subscriptionExpiresAt||null,
+            credentialsMode: d.credentialsMode||false,
+            loginDetails: d.loginDetails||'',
+            accessLink: d.accessLink||'',
+            approvedText: d.approvedText||state.approvedText,
+            approvedSteps: d.approvedSteps||state.approvedSteps,
+            postApprovedText: d.postApprovedText||state.postApprovedText,
+            postApprovedSteps: d.postApprovedSteps||state.postApprovedSteps,
+          });
+          showActivated(d.approvedAt, d.subscriptionExpiresAt);
+        } else if (d.status === 'declined') {
+          clearInterval(pollTimer); showDeclined(d.declineReason);
+        }
+      } catch {}
+    }, 5000);
+  };
+
+  const showActivated = (approvedAt, subscriptionExpiresAt) => {
+    const isGpt = currentProduct === 'chatgpt';
+
+    // Timeline
+    document.getElementById('tl2-dot').className='tl-dot done'; document.getElementById('tl2-dot').textContent='✓';
+    document.getElementById('tl2-title').textContent='Verification Complete';
+    document.getElementById('tl2-sub').textContent='Your details have been verified successfully.';
+    document.getElementById('tl3-dot').className='tl-dot done'; document.getElementById('tl3-dot').textContent='✓';
+    document.getElementById('tl3-title').textContent='Package Activated';
+    document.getElementById('tl3-title').classList.remove('dim');
+    document.getElementById('tl3-sub').textContent='Your package is now live.';
+
+    // Banner
+    const ts = approvedAt ? new Date(approvedAt) : new Date();
+    document.getElementById('act-date').textContent = ts.toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
+    document.getElementById('act-time').textContent = ts.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+
+    const subExp = subscriptionExpiresAt || state.subscriptionExpiresAt;
+    if (subExp) {
+      document.getElementById('act-expiry-row').style.display = '';
+      document.getElementById('act-expiry-date').textContent = new Date(subExp).toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
+    }
+
+    // Order card
+    document.getElementById('act-pkg').textContent   = state.packageType;
+    const dataRowEl    = document.getElementById('act-data-row');
+    const dataRowLabel = dataRowEl.querySelector('.oc-label');
+    if (state.credentialsMode) {
+      dataRowEl.style.display = 'none';
+      if (state.loginDetails || state.accessLink) {
+        document.getElementById('creds-box').style.display = 'block';
+        if (state.loginDetails) document.getElementById('creds-content').textContent = state.loginDetails;
+        if (state.accessLink) {
+          const linkBtn = document.getElementById('access-link-btn');
+          linkBtn.href = state.accessLink;
+          linkBtn.style.display = '';
+        }
+      }
+    } else if (isGpt) {
+      dataRowLabel.textContent='Product'; document.getElementById('act-data').textContent='ChatGPT Plus';
+    } else {
+      dataRowLabel.textContent='Organization ID'; document.getElementById('act-data').textContent=state.orgId?state.orgId.slice(0,18)+'…':'—';
+    }
+    document.getElementById('act-wechat').textContent = state.wechat || '—';
+    document.getElementById('act-email').textContent  = state.email  || '—';
+
+    // Approved text
+    if (state.approvedText) document.getElementById('act-sub').textContent = state.approvedText;
+
+    // Pre-activation steps
+    if (state.approvedSteps && state.approvedSteps.length) {
+      document.getElementById('steps-content').innerHTML = state.approvedSteps.map((step, i) =>
+        `<div class="cp-step"><div class="cp-num ${isGpt?'gpt':''}">${i+1}</div><div>${_esc(step)}</div></div>`
+      ).join('');
+      if (isGpt) document.getElementById('check-pro-steps').classList.add('gpt-check');
+    }
+
+    // Post-activation section
+    const postText  = state.postApprovedText;
+    const postSteps = state.postApprovedSteps;
+    if (postText || (postSteps && postSteps.length)) {
+      const postSection = document.getElementById('post-section');
+      if (isGpt) postSection.classList.add('gpt-post');
+      if (postText) document.getElementById('post-text').textContent = postText;
+      if (postSteps && postSteps.length) {
+        document.getElementById('post-steps-content').innerHTML = postSteps.map((step, i) =>
+          `<div class="cp-step"><div class="cp-num ${isGpt?'gpt':''}">${i+1}</div><div>${_esc(step)}</div></div>`
+        ).join('');
+      }
+      postSection.style.display = 'block';
+    }
+
+    // Countdown
+    if (subExp) {
+      const now      = new Date();
+      const expDate  = new Date(subExp);
+      if (expDate <= now) {
+        document.getElementById('expired-wrap').style.display = 'block';
+      } else {
+        // Estimate total days from subscription
+        const totalMs  = expDate - ts;
+        const totalDays= Math.round(totalMs / (1000*60*60*24));
+        startCountdown(subExp, totalDays);
+      }
+    }
+
+    setTimeout(() => { show('screen-activated'); launchConfetti(); }, 600);
+  };
+
+  const _esc = (s) => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+  const launchConfetti = () => {
+    const c = document.getElementById('confetti');
+    c.innerHTML = '';
+    c.classList.add('on');
+
+    // ── Product themes ─────────────────────────────────────────────────────
+    const themes = {
+      claude: {
+        // Electric blue / indigo / violet — Claude's signature palette
+        flowers: ['🌸','🪻','💜','🌺','✨','🫧','💙','🔮','🌐','⚡'],
+        weights: [  5,   5,   4,   4,   5,   3,   4,   3,   2,   2 ],
+      },
+      chatgpt: {
+        // Teal / green / sage — GPT's natural palette
+        flowers: ['🌿','🍀','🌱','🌼','💚','✨','🫧','🌾','🌻','🍃'],
+        weights: [  5,   5,   4,   4,   4,   4,   3,   3,   2,   4 ],
+      },
+      grammarly: {
+        // Red / warm coral — Grammarly's identity
+        flowers: ['🌹','🌷','❤️','🧡','🌺','✨','💝','🫧','🌸','🔴'],
+        weights: [  5,   5,   4,   4,   4,   3,   3,   3,   3,   2 ],
+      },
+      copilot: {
+        // Dark / stars / space — GitHub Copilot
+        flowers: ['⭐','🌟','💫','✨','🌙','🪐','💙','🌑','🔵','🫧'],
+        weights: [  5,   5,   4,   5,   4,   3,   3,   2,   3,   3 ],
+      },
+    };
+
+    // ── Seasonal overlays (by month, 0-indexed) ────────────────────────────
+    // Each season runs for 3 months and has its own weighted emoji pool.
+    // The season is blended in at ~20% of total flowers spawned.
+    const month = new Date().getMonth(); // 0 = Jan … 11 = Dec
+
+    const seasons = {
+      spring: { // Mar(2) Apr(3) May(4) — blossoms, new growth, gentle pastels
+        label:   'Spring',
+        flowers: ['🌸','🌷','🌼','🌻','🌺','🍀','🦋','🐝','🌱','💐'],
+        weights: [  6,   5,   5,   4,   4,   4,   3,   3,   4,   4 ],
+      },
+      summer: { // Jun(5) Jul(6) Aug(7) — sun, warmth, tropical energy
+        label:   'Summer',
+        flowers: ['☀️','🌞','🌴','🍉','🌊','🏖️','🌅','🦜','🍍','🌺'],
+        weights: [  6,   5,   4,   4,   4,   3,   3,   3,   3,   4 ],
+      },
+      autumn: { // Sep(8) Oct(9) Nov(10) — leaves, harvest, warm amber tones
+        label:   'Autumn',
+        flowers: ['🍂','🍁','🍄','🌾','🎃','🦊','🍎','🌰','🍇','🧡'],
+        weights: [  6,   6,   4,   4,   3,   3,   4,   3,   3,   4 ],
+      },
+      winter: { // Dec(11) Jan(0) Feb(1) — snow, ice, festive sparkle
+        label:   'Winter',
+        flowers: ['❄️','⛄','🌨️','🎄','✨','💙','🌟','🕯️','🧊','🤍'],
+        weights: [  6,   5,   5,   4,   5,   4,   4,   3,   3,   4 ],
+      },
+    };
+
+    const seasonKey = month >= 2 && month <= 4 ? 'spring'
+                    : month >= 5 && month <= 7 ? 'summer'
+                    : month >= 8 && month <= 10 ? 'autumn'
+                    : 'winter';
+    const season = seasons[seasonKey];
+
+    // ── Build weighted pools ───────────────────────────────────────────────
+    const theme = themes[currentProduct] || themes.claude;
+
+    const productPool = [];
+    theme.flowers.forEach((f, i) => {
+      for (let w = 0; w < (theme.weights[i] || 1); w++) productPool.push(f);
+    });
+
+    const seasonPool = [];
+    season.flowers.forEach((f, i) => {
+      for (let w = 0; w < (season.weights[i] || 1); w++) seasonPool.push(f);
+    });
+
+    // ── Blended picker — 80% product, 20% seasonal ────────────────────────
+    const rand    = (a, b) => a + Math.random() * (b - a);
+    const pickEmoji = () => {
+      const pool = Math.random() < 0.20 ? seasonPool : productPool;
+      return pool[Math.floor(Math.random() * pool.length)];
+    };
+
+    // ── Spawn flowers ──────────────────────────────────────────────────────
+    const count = 55;
+
+    const spawnFlower = (delay) => {
+      const el = document.createElement('div');
+      el.className = 'flower';
+      el.textContent = pickEmoji();
+      const duration = rand(3.0, 5.8);
+      el.style.cssText = [
+        `left:${rand(1, 97)}%`,
+        `font-size:${rand(1.0, 2.1)}em`,
+        `animation-duration:${duration}s`,
+        `animation-delay:${delay}s`,
+        `--rot:${rand(-600, 600)}deg`,
+        `--sc:${rand(0.4, 1.1)}`,
+        `filter:drop-shadow(0 2px 5px rgba(0,0,0,.12))`,
+      ].join(';');
+      c.appendChild(el);
+      setTimeout(() => el.remove(), (delay + duration + 0.8) * 1000);
+    };
+
+    for (let i = 0; i < count; i++) {
+      spawnFlower(rand(0, 2.4));
+    }
+
+    setTimeout(() => { c.classList.remove('on'); c.innerHTML = ''; }, 9000);
+  };
+</script>
+</body>
+</html>
