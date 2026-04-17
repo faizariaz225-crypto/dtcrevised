@@ -304,20 +304,28 @@
     </div>
 
     <div class="login-title">Welcome back</div>
-    <div class="login-sub">Sign in to the admin panel to manage activations.</div>
+    <div class="login-sub">Sign in to the admin panel.</div>
 
     <div class="form-group">
-      <label for="admin-key">Admin Key</label>
+      <label for="login-email">Email</label>
+      <div class="input-group">
+        <span class="input-group-icon">✉</span>
+        <input type="email" id="login-email" placeholder="your@email.com" autocomplete="email"/>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="login-password">Password</label>
       <div class="input-group">
         <span class="input-group-icon">🔑</span>
-        <input type="password" id="admin-key" placeholder="Enter your admin key…"/>
+        <input type="password" id="login-password" placeholder="Your password"/>
       </div>
     </div>
 
     <button class="btn btn-primary btn-login" id="login-btn" onclick="Auth.login()">Sign In →</button>
     <div class="msg err" id="login-err"></div>
 
-    <div class="login-footer">DTC Admin Panel v3.0</div>
+    <div class="login-footer">DTC Admin Panel · <span style="color:#94a3b8">Super admin: email&nbsp;=&nbsp;<code>admin</code>, password&nbsp;=&nbsp;your ADMIN_KEY</span></div>
   </div>
 </div>
 
@@ -343,44 +351,47 @@
 
     <div class="nav">
       <div class="nav-sec">Main</div>
-      <div class="nav-item active" onclick="Shell.navigate('dashboard', this)">
+      <div class="nav-item active" data-page="dashboard" onclick="Shell.navigate('dashboard', this)">
         <span class="icon">⚡</span>Dashboard
       </div>
-      <div class="nav-item" onclick="Shell.navigate('customers', this)">
+      <div class="nav-item" data-page="customers" onclick="Shell.navigate('customers', this)">
         <span class="icon">👤</span>Customers
         <span class="nav-badge" id="nb-exp" style="display:none">0</span>
       </div>
 
       <div class="nav-sec" style="margin-top:.5rem">Revenue</div>
-      <div class="nav-item" onclick="Shell.navigate('revenue', this)">
+      <div class="nav-item" data-page="revenue" onclick="Shell.navigate('revenue', this)">
         <span class="icon">💰</span>Revenue
       </div>
-      <div class="nav-item" onclick="Shell.navigate('resellers', this)">
+      <div class="nav-item" data-page="resellers" onclick="Shell.navigate('resellers', this)">
         <span class="icon">🤝</span>Resellers
       </div>
       <div class="nav-sec" style="margin-top:.5rem">Catalogue</div>
-      <div class="nav-item" onclick="Shell.navigate('products', this)">
+      <div class="nav-item" data-page="products" onclick="Shell.navigate('products', this)">
         <span class="icon">📦</span>Products
       </div>
       <div class="nav-sec" style="margin-top:.5rem">Settings</div>
-      <div class="nav-item" onclick="Shell.navigate('landing', this)">
+      <div class="nav-item" data-page="landing" onclick="Shell.navigate('landing', this)">
         <span class="icon">🌐</span>Landing Page
       </div>
-      <div class="nav-item" onclick="Shell.navigate('instructions', this)">
+      <div class="nav-item" data-page="instructions" onclick="Shell.navigate('instructions', this)">
         <span class="icon">📋</span>Instructions
       </div>
-      <div class="nav-item" onclick="Shell.navigate('notifications', this)">
+      <div class="nav-item" data-page="notifications" onclick="Shell.navigate('notifications', this)">
         <span class="icon">🔔</span>Notifications
       </div>
-      <div class="nav-item" onclick="Shell.navigate('settings', this)">
+      <div class="nav-item" data-page="settings" onclick="Shell.navigate('settings', this)">
         <span class="icon">⚙</span>Settings
       </div>
-      <div class="nav-item" onclick="Shell.navigate('campaigns', this)">
+      <div class="nav-item" data-page="campaigns" onclick="Shell.navigate('campaigns', this)">
         <span class="icon">📨</span>Email Campaigns
       </div>
-      <div class="nav-item" onclick="Shell.navigate('livechat', this)" id="nav-livechat">
+      <div class="nav-item" data-page="livechat" onclick="Shell.navigate('livechat', this)" id="nav-livechat">
         <span class="icon">💬</span>Live Chat
         <span class="nav-badge" id="nb-chat" style="display:none">0</span>
+      </div>
+      <div class="nav-item" data-page="staff" onclick="Shell.navigate('staff', this)" id="nav-staff">
+        <span class="icon">👥</span>Staff &amp; Roles
       </div>
       <div class="nav-sec" style="margin-top:.5rem">Portals</div>
       <div class="nav-item" onclick="window.open('/customer','_blank')">
@@ -389,8 +400,17 @@
       <div class="nav-item" onclick="window.open('/reseller','_blank')">
         <span class="icon">🤝</span>Reseller Portal
       </div>
-      <div class="nav-item" onclick="Shell.navigate('email', this)">
+      <div class="nav-item" data-page="email" onclick="Shell.navigate('email', this)">
         <span class="icon">✉</span>Email Config
+      </div>
+    </div>
+
+    <!-- Logged-in user info + logout -->
+    <div style="padding:.6rem 1rem .4rem;border-top:1px solid var(--border);margin-top:.4rem">
+      <div id="staff-identity-badge" style="display:none;flex-direction:column;gap:.2rem;margin-bottom:.5rem"></div>
+      <div style="display:flex;gap:.3rem">
+        <button onclick="StaffAdmin.openChangePassword()" style="flex:1;padding:.4rem;background:none;border:1px solid var(--border);border-radius:7px;font-size:.68rem;color:var(--muted);cursor:pointer;font-family:'Inter',sans-serif" title="Change my password">🔑 Password</button>
+        <button onclick="Auth.logout()" style="flex:1;padding:.4rem;background:none;border:1px solid var(--border);border-radius:7px;font-size:.68rem;color:var(--muted);cursor:pointer;font-family:'Inter',sans-serif">✕ Sign Out</button>
       </div>
     </div>
 
@@ -398,7 +418,7 @@
       <span class="dt-icon" id="dark-icon">🌙</span>
       <span id="dark-label">Dark Mode</span>
     </button>
-    <div class="sb-footer">Admin Panel v3.0 &nbsp;·&nbsp; <span style="font-size:.65rem;opacity:.6">⌘K Search</span></div>
+    <div class="sb-footer">DTC Admin &nbsp;·&nbsp; <span style="font-size:.65rem;opacity:.6">⌘K Search</span></div>
   </nav>
 
   <!-- ── Main ── -->
@@ -1211,6 +1231,82 @@
       </div>
     </div><!-- /page-email -->
 
+    <!-- ── Staff & Roles ── -->
+    <div class="page" id="page-staff">
+      <div class="ph" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:.6rem">
+        <div>
+          <div class="ph-title">Staff &amp; Roles</div>
+          <div class="ph-sub">Manage staff accounts, set roles, and view the audit log. Only Super Admins can access this page.</div>
+        </div>
+        <button class="btn btn-primary" onclick="StaffManager.openModal()">＋ Add Staff</button>
+      </div>
+
+      <!-- Role legend -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.6rem;margin-bottom:1.4rem">
+        <div style="background:#fdf4ff;border:1px solid #e9d5ff;border-radius:9px;padding:.7rem .9rem">
+          <div style="font-size:.72rem;font-weight:700;color:#7c3aed;margin-bottom:.25rem">Super Admin</div>
+          <div style="font-size:.68rem;color:#64748b;line-height:1.5">Full access. Manages staff &amp; settings.</div>
+        </div>
+        <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:9px;padding:.7rem .9rem">
+          <div style="font-size:.72rem;font-weight:700;color:#2563eb;margin-bottom:.25rem">Admin</div>
+          <div style="font-size:.68rem;color:#64748b;line-height:1.5">Full access. Cannot create superadmins.</div>
+        </div>
+        <div style="background:#ecfeff;border:1px solid #a5f3fc;border-radius:9px;padding:.7rem .9rem">
+          <div style="font-size:.72rem;font-weight:700;color:#0891b2;margin-bottom:.25rem">Support</div>
+          <div style="font-size:.68rem;color:#64748b;line-height:1.5">Approve/decline, customers, chat, reminders.</div>
+        </div>
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:9px;padding:.7rem .9rem">
+          <div style="font-size:.72rem;font-weight:700;color:#64748b;margin-bottom:.25rem">Read Only</div>
+          <div style="font-size:.68rem;color:#64748b;line-height:1.5">View dashboard &amp; customers. No actions.</div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div style="display:flex;gap:.35rem;margin-bottom:1rem;border-bottom:1px solid var(--border);padding-bottom:.6rem">
+        <button class="fb active" id="stab-members" onclick="StaffManager._switchTab('members',this)">Members</button>
+        <button class="fb" id="stab-audit" onclick="StaffManager._switchTab('audit',this)">Audit Log</button>
+        <button class="fb" id="stab-password" onclick="StaffManager._switchTab('password',this)">Change Password</button>
+      </div>
+
+      <!-- Members tab -->
+      <div id="staff-tab-members">
+        <div id="staff-list"><div class="empty">Loading…</div></div>
+      </div>
+
+      <!-- Audit log tab -->
+      <div id="staff-tab-audit" style="display:none">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:.6rem">
+          <button class="btn btn-outline btn-sm" onclick="StaffManager.refreshAudit()">↻ Refresh</button>
+        </div>
+        <div id="staff-audit-list"><div class="empty">Loading…</div></div>
+      </div>
+
+      <!-- Change password tab -->
+      <div id="staff-tab-password" style="display:none">
+        <div style="max-width:380px">
+          <div class="form-group" style="margin-bottom:.8rem">
+            <label style="font-size:.72rem;font-weight:600;display:block;margin-bottom:.3rem">Current Password</label>
+            <input type="password" id="cp-current" placeholder="Your current password"
+              style="width:100%;padding:.65rem .9rem;border:1.5px solid var(--border);border-radius:8px;font-size:.85rem;outline:none;font-family:'Inter',sans-serif"/>
+          </div>
+          <div class="form-group" style="margin-bottom:.8rem">
+            <label style="font-size:.72rem;font-weight:600;display:block;margin-bottom:.3rem">New Password</label>
+            <input type="password" id="cp-new" placeholder="Min 6 characters"
+              style="width:100%;padding:.65rem .9rem;border:1.5px solid var(--border);border-radius:8px;font-size:.85rem;outline:none;font-family:'Inter',sans-serif"/>
+          </div>
+          <div class="form-group" style="margin-bottom:.8rem">
+            <label style="font-size:.72rem;font-weight:600;display:block;margin-bottom:.3rem">Confirm New Password</label>
+            <input type="password" id="cp-confirm" placeholder="Repeat new password"
+              style="width:100%;padding:.65rem .9rem;border:1.5px solid var(--border);border-radius:8px;font-size:.85rem;outline:none;font-family:'Inter',sans-serif"/>
+          </div>
+          <div id="cp-err" style="display:none;font-size:.75rem;color:#dc2626;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:.45rem .7rem;margin-bottom:.6rem"></div>
+          <div id="cp-ok"  style="display:none;font-size:.75rem;color:#16a34a;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:.45rem .7rem;margin-bottom:.6rem"></div>
+          <button onclick="StaffManager.changePassword()" class="btn btn-primary">Update Password</button>
+          <p style="font-size:.7rem;color:#94a3b8;margin-top:.7rem">Super admin (master key) password is set via the <code>ADMIN_KEY</code> environment variable and cannot be changed here.</p>
+        </div>
+      </div>
+    </div><!-- /page-staff -->
+
   </main>
 </div><!-- /app -->
 
@@ -1499,12 +1595,8 @@
   <div class="session-expired-box">
     <div style="font-size:2.2rem;margin-bottom:.75rem">🔒</div>
     <div style="font-size:1rem;font-weight:700;color:var(--text);margin-bottom:.4rem">Session Expired</div>
-    <div style="font-size:.82rem;color:var(--muted);line-height:1.6;margin-bottom:1.4rem">You've been inactive for 30 minutes. Please enter your admin key to continue.</div>
-    <input id="session-reauth-input" type="password" placeholder="Admin key"
-      style="width:100%;padding:.7rem .9rem;border:1.5px solid var(--border);border-radius:9px;font-family:'Inter',sans-serif;font-size:.88rem;color:var(--text);background:var(--white);outline:none;margin-bottom:.75rem;text-align:center"
-      onkeydown="if(event.key==='Enter')Shell.reauth()"/>
-    <button onclick="Shell.reauth()" class="btn btn-primary" style="width:100%">Continue Session</button>
-    <div id="session-reauth-err" style="display:none;margin-top:.6rem;font-size:.75rem;color:var(--error)"></div>
+    <div style="font-size:.82rem;color:var(--muted);line-height:1.6;margin-bottom:1.4rem">You've been signed out. Please sign in again to continue.</div>
+    <button onclick="location.reload()" class="btn btn-primary" style="width:100%">Sign In Again</button>
   </div>
 </div>
 
@@ -1688,14 +1780,8 @@
     if (editModal) editModal.addEventListener('click', e => { if (e.target === editModal) EditCustomer.close(); });
     const importModal = document.getElementById('import-customer-modal');
     if (importModal) importModal.addEventListener('click', e => { if (e.target === importModal) ImportCustomer.close(); });
-  });
-</script>
-<script src="/js/bulk-actions.js"></script>
-<script>
-  // Init bulk actions after page load
-  document.addEventListener('DOMContentLoaded', () => {
     if (typeof BulkActions !== 'undefined') BulkActions.init();
   });
-  // Also init after auth since DOMContentLoaded may have already fired
-  const _origShellInit = typeof Shell !== 'undefined' ? Shell.init : null;
 </script>
+<script src="js/staff-manager.js"></script>
+<script src="js/bulk-actions.js"></script>
