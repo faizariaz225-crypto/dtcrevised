@@ -1,5 +1,4 @@
 /* ─── DTC Admin — Shared Utilities ──────────────────────────────────────── */
-
 'use strict';
 
 // ── Date formatting ──────────────────────────────────────────────────────────
@@ -73,14 +72,23 @@ const statusBadge = (s) => {
   return `<span class="badge ${cls}"><span class="b-dot"></span>${label}</span>`;
 };
 
-// ── API wrapper ──────────────────────────────────────────────────────────────
+// ── API wrapper — auto-injects staff token + legacy adminKey ─────────────────
 const api = async (url, body) => {
-  const opts = body
-    ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
-    : { method: 'GET' };
+  const token = (typeof Store !== 'undefined') ? Store.staffToken : '';
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['x-staff-token'] = token;
+
+  // Keep adminKey in body for any legacy endpoints that still check it
+  const enrichedBody = body
+    ? { adminKey: (typeof Store !== 'undefined' ? Store.adminKey : ''), ...body }
+    : undefined;
+
+  const opts = enrichedBody
+    ? { method: 'POST', headers, body: JSON.stringify(enrichedBody) }
+    : { method: 'GET',  headers };
+
   const r = await fetch(url, opts);
   if (!r.ok) {
-    // Gracefully return null for non-JSON responses (e.g. 404 HTML pages)
     const text = await r.text();
     return text.trim().startsWith('{') ? JSON.parse(text) : null;
   }

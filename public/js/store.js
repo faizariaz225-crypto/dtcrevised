@@ -1,14 +1,11 @@
 /* ─── DTC Admin — Application State Store ───────────────────────────────── */
-
 'use strict';
 
-/**
- * Single source of truth for all runtime data.
- * Components read from Store and call Store.set*() to update.
- * This replaces scattered `let` globals across the old single file.
- */
-const Store = (() => {
+var Store = (() => {
   let _adminKey      = '';
+  let _staffToken    = '';
+  let _role          = '';
+  let _staffName     = '';
   let _products      = [];
   let _revenue       = { total: 0, byProduct: {}, byReseller: {}, resellerTotal: 0, directTotal: 0 };
   let _settings      = {};
@@ -20,9 +17,21 @@ const Store = (() => {
   let _custFilter    = 'all';
 
   return {
-    // ── Admin key ────────────────────────────────────────────────────────────
+    // ── Admin key (legacy — kept for backwards compat in modules) ────────────
     get adminKey()     { return _adminKey; },
     setAdminKey(k)     { _adminKey = k; },
+
+    // ── Staff session token ───────────────────────────────────────────────────
+    get staffToken()   { return _staffToken; },
+    setStaffToken(t)   { _staffToken = t; },
+
+    // ── Role ──────────────────────────────────────────────────────────────────
+    get role()         { return _role; },
+    setRole(r)         { _role = r; },
+
+    // ── Staff name ────────────────────────────────────────────────────────────
+    get staffName()    { return _staffName; },
+    setStaffName(n)    { _staffName = n; },
 
     // ── Tokens (links) ───────────────────────────────────────────────────────
     get tokens()       { return _tokens; },
@@ -63,10 +72,12 @@ const Store = (() => {
     setTemplates(t)    { _templates = t || []; },
 
     // ── Bulk load after login ─────────────────────────────────────────────────
-    load({ tokens, emailLog, revenue }) {
+    load({ tokens, emailLog, revenue, role, staffName }) {
       this.setTokens(tokens);
       this.setEmailLog(emailLog);
-      if (revenue) this.setRevenue(revenue);
+      if (revenue)   this.setRevenue(revenue);
+      if (role)      this.setRole(role);
+      if (staffName) this.setStaffName(staffName);
     },
   };
 })();
