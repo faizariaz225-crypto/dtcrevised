@@ -1,7 +1,7 @@
 /* ─── DTC Admin — App Shell ─────────────────────────────────────────────── */
 'use strict';
 
-const Shell = (() => {
+var Shell = (() => {
 
   // ── Session timeout (30 min inactivity) ───────────────────────────────
   const SESSION_MS   = 30 * 60 * 1000;
@@ -53,8 +53,10 @@ const Shell = (() => {
     document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
     const icon  = document.getElementById('dark-icon');
     const label = document.getElementById('dark-label');
-    if (icon)  icon.textContent  = dark ? '☀️' : '🌙';
-    if (label) label.textContent = dark ? 'Light Mode' : 'Dark Mode';
+    const topbtn = document.getElementById('topbar-dark-btn');
+    if (icon)   icon.textContent   = dark ? '☀️' : '🌙';
+    if (label)  label.textContent  = dark ? 'Light Mode' : 'Dark Mode';
+    if (topbtn) topbtn.textContent = dark ? '☀️' : '🌙';
     try { localStorage.setItem('dtc-dark', dark ? '1' : '0'); } catch {}
   };
 
@@ -184,6 +186,8 @@ const Shell = (() => {
     if (pageId === 'notifications') { Notifications.init(); Notifications.load(); }
     if (pageId === 'landing')       Landing.load();
     if (pageId === 'livechat')      LiveChat.load();
+    if (pageId === 'theme')         ThemeEditor.render();
+    if (pageId === 'automation')    Automation.render();
     _resetTimer();
   };
 
