@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>DTC — AI Subscriptions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+/* ── TOKENS ── */
+:root{
+  --white:#ffffff;
+  --off:#f9f9f8;
+  --off2:#f2f2f0;
+  --border:#e8e8e5;
+  --border2:#d4d4cf;
+  --ink:#0d0d0c;
+  --ink2:#1a1a18;
+  --muted:#6b6b66;
+  --muted2:#9e9e98;
+  --blue:#0052cc;
+  --blue-h:#0041a3;
+  --blue-lt:#eaf1ff;
+  --blue-bd:#b3cdff;
+  --green:#0a7c3e;
+  --green-lt:#e6f4ed;
+  --red:#c92d2d;
+  --amber:#92510a;
+  --amber-lt:#fef3dc;
+  --r:10px;--r-lg:16px;--r-xl:22px;--r-2xl:28px;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.05);
+  --shadow:0 1px 4px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.05);
+  --shadow-lg:0 8px 32px rgba(0,0,0,.09),0 2px 8px rgba(0,0,0,.05);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--white);color:var(--ink);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+a{text-decoration:none;color:inherit}
+button{font-family:'Plus Jakarta Sans',sans-serif;cursor:pointer;border:none;background:none}
+
+/* ── TOPBAR ── */
+.topbar{
+  position:sticky;top:0;z-index:200;
+  background:rgba(255,255,255,.88);
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border-bottom:1px solid var(--border);
+  height:58px;display:flex;align-items:center;
+  padding:0 32px;gap:0;
+}
+.tb-logo{display:flex;align-items:center;gap:8px;margin-right:40px}
+.tb-logomark{width:30px;height:30px;background:var(--ink);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.tb-logomark svg{width:14px;height:14px}
+.tb-wordmark{font-family:'Instrument Serif',serif;font-size:17px;color:var(--ink);letter-spacing:-.01em}
+.tb-links{display:flex;gap:2px;flex:1}
+.tb-link{font-size:13px;font-weight:500;color:var(--muted);padding:6px 12px;border-radius:7px;transition:all .15s;white-space:nowrap}
+.tb-link:hover{color:var(--ink);background:var(--off)}
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.tb-ghost{font-size:13px;font-weight:500;color:var(--muted);padding:6px 14px;border:1px solid var(--border);border-radius:8px;transition:all .15s}
+.tb-ghost:hover{color:var(--ink);border-color:var(--border2)}
+.tb-cart{display:flex;align-items:center;gap:6px;padding:7px 16px;background:var(--ink);color:var(--white);border-radius:9px;font-size:13px;font-weight:600;transition:all .18s;letter-spacing:.01em}
+.tb-cart:hover{background:var(--ink2);transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.2)}
+.cart-dot{background:var(--blue);width:18px;height:18px;border-radius:50%;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.ham{display:none;flex-direction:column;gap:4.5px;padding:4px;margin-left:8px}
+.ham span{display:block;width:20px;height:1.5px;background:var(--ink);border-radius:2px;transition:all .25s}
+@media(max-width:720px){.tb-links{display:none}.tb-ghost{display:none}.ham{display:flex}}
+
+/* ── PAGES ── */
+.pg{display:none}.pg.on{display:block}
+
+/* ── FLASH BAR ── */
+.flash-bar{display:none;text-align:center;padding:9px 24px;font-size:12px;font-weight:600;letter-spacing:.01em;background:var(--amber-lt);color:var(--amber);border-bottom:1px solid #fde68a;position:sticky;top:58px;z-index:190}
+.flash-mono{font-family:'JetBrains Mono',monospace;font-weight:700}
+
+/* ── CATALOGUE ── */
+.cat-wrap{max-width:1100px;margin:0 auto;padding:56px 32px 80px}
+@media(max-width:720px){.cat-wrap{padding:32px 20px 60px}}
+.cat-hero{margin-bottom:52px}
+.cat-eyebrow{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--blue);background:var(--blue-lt);border:1px solid var(--blue-bd);padding:.3rem .9rem;border-radius:99px;margin-bottom:18px}
+.cat-eyebrow-dot{width:5px;height:5px;background:var(--blue);border-radius:50%}
+.cat-h{font-family:'Instrument Serif',serif;font-size:clamp(36px,5vw,56px);line-height:1.04;color:var(--ink);letter-spacing:-.03em;margin-bottom:14px}
+.cat-h em{font-style:italic;color:var(--muted)}
+.cat-sub{font-size:16px;color:var(--muted);line-height:1.75;max-width:520px}
+.cat-layout{display:grid;grid-template-columns:1fr 300px;gap:24px;align-items:start}
+@media(max-width:900px){.cat-layout{grid-template-columns:1fr}}
+.prod-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:560px){.prod-grid{grid-template-columns:1fr}}
+
+/* ── PRODUCT CARD ── */
+.pc{background:var(--white);border:1px solid var(--border);border-radius:var(--r-2xl);overflow:hidden;transition:all .22s;cursor:pointer;display:flex;flex-direction:column}
+.pc:hover{border-color:var(--border2);box-shadow:var(--shadow-lg);transform:translateY(-3px)}
+.pc.sel{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-lt),var(--shadow)}
+.pc-img{height:180px;display:flex;align-items:center;justify-content:center;position:relative;flex-shrink:0}
+.pc-tag{position:absolute;top:14px;left:14px;font-size:10px;font-weight:700;letter-spacing:.04em;padding:3px 9px;border-radius:99px}
+.pc-check{position:absolute;top:14px;right:14px;width:22px;height:22px;background:var(--blue);border-radius:50%;display:none;align-items:center;justify-content:center}
+.pc.sel .pc-check{display:flex}
+.pc-body{padding:20px;display:flex;flex-direction:column;flex:1}
+.pc-name{font-family:'Instrument Serif',serif;font-size:20px;color:var(--ink);letter-spacing:-.02em;margin-bottom:4px}
+.pc-cat{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted2);margin-bottom:10px}
+.pc-desc{font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:14px;flex:1}
+.pc-view{font-size:12px;font-weight:600;color:var(--blue);padding:0;border:none;background:none;display:inline-flex;align-items:center;gap:3px;margin-bottom:16px;transition:gap .15s}
+.pc-view:hover{gap:6px}
+.pc-foot{display:flex;align-items:center;justify-content:space-between;padding-top:14px;border-top:1px solid var(--border)}
+.pc-price{font-size:13px;color:var(--muted)}
+.pc-price strong{font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700;color:var(--ink)}
+.pc-add{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:8px 14px;border-radius:9px;border:1px solid var(--border);background:var(--white);color:var(--ink);transition:all .18s}
+.pc-add:hover{border-color:var(--ink);background:var(--ink);color:var(--white)}
+.pc-add.on{background:var(--blue);color:var(--white);border-color:var(--blue)}
+
+/* ── CART SIDEBAR ── */
+.cart-panel{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);padding:20px;position:sticky;top:78px;box-shadow:var(--shadow)}
+.cp-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+.cp-title{font-family:'Instrument Serif',serif;font-size:16px;color:var(--ink)}
+.cp-count{font-size:11px;color:var(--muted2)}
+.cp-empty{text-align:center;padding:24px 0;font-size:13px;color:var(--muted2);line-height:1.8}
+.ci{padding:12px 0;border-bottom:1px solid var(--off2)}
+.ci-row{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.ci-icon{font-size:18px;line-height:1}
+.ci-name{font-size:12px;font-weight:600;color:var(--ink);flex:1}
+.ci-rm{color:var(--muted2);font-size:16px;line-height:1;padding:0;transition:color .15s}
+.ci-rm:hover{color:var(--red)}
+.ci-pkg{width:100%;font-size:11px;padding:5px 8px;border:1px solid var(--border);border-radius:7px;background:var(--off);color:var(--ink);outline:none;font-family:'Plus Jakarta Sans',sans-serif;margin-bottom:3px}
+.ci-price{font-size:12px;font-weight:700;color:var(--ink);text-align:right;font-family:'JetBrains Mono',monospace}
+.cart-total-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0 12px}
+.cart-total-lbl{font-size:13px;color:var(--muted)}
+.cart-total-val{font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;color:var(--ink)}
+.btn-co{width:100%;padding:13px;background:var(--ink);color:var(--white);border-radius:11px;font-size:14px;font-weight:600;letter-spacing:.01em;transition:all .2s}
+.btn-co:hover{background:var(--ink2);transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,0,0,.18)}
+.btn-co:disabled{background:var(--off2);color:var(--muted2);cursor:not-allowed;transform:none;box-shadow:none}
+.cart-guarantee{display:flex;align-items:center;gap:6px;margin-top:10px;padding:9px 10px;background:var(--green-lt);border-radius:8px;font-size:11px;color:var(--green);font-weight:500}
+
+/* ── DETAIL PAGE ── */
+.det-wrap{max-width:1100px;margin:0 auto;padding:40px 32px 80px}
+@media(max-width:720px){.det-wrap{padding:24px 20px 60px}}
+.back-btn{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;color:var(--muted);padding:0;border:none;background:none;margin-bottom:28px;transition:color .15s}
+.back-btn:hover{color:var(--ink)}
+.det-layout{display:grid;grid-template-columns:1fr 300px;gap:28px;align-items:start}
+@media(max-width:900px){.det-layout{grid-template-columns:1fr}}
+
+/* Gallery */
+.det-gallery{background:var(--white);border:1px solid var(--border);border-radius:var(--r-2xl);overflow:hidden;margin-bottom:20px;box-shadow:var(--shadow)}
+.gallery-stage{height:240px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;cursor:zoom-in}
+.gallery-stage:hover .gallery-zoom{opacity:1}
+.g-slide-wrap{font-size:88px;line-height:1;transition:opacity .2s}
+.gallery-tag{position:absolute;top:14px;left:14px;font-size:10px;font-weight:700;letter-spacing:.04em;padding:3px 9px;border-radius:99px;z-index:2}
+.gallery-arr{position:absolute;top:50%;transform:translateY(-50%);width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.9);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;z-index:3;font-size:16px;color:var(--ink);transition:all .15s;box-shadow:var(--shadow-sm)}
+.gallery-arr:hover{background:var(--white);box-shadow:var(--shadow)}
+.gallery-arr.l{left:12px}
+.gallery-arr.r{right:12px}
+.gallery-zoom{position:absolute;bottom:12px;right:12px;width:28px;height:28px;border-radius:7px;background:rgba(255,255,255,.85);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;z-index:3;opacity:0;transition:opacity .2s;font-size:12px;color:var(--muted)}
+.gallery-dots{display:flex;justify-content:center;gap:5px;padding:10px 0 4px}
+.gdot{width:6px;height:6px;border-radius:50%;background:var(--border2);border:none;transition:all .2s;cursor:pointer;padding:0}
+.gdot.on{background:var(--ink);width:18px;border-radius:3px}
+.gallery-thumbs{display:flex;gap:7px;padding:4px 16px 16px;overflow-x:auto;scrollbar-width:none}
+.gallery-thumbs::-webkit-scrollbar{display:none}
+.gthumb{width:56px;height:44px;border-radius:8px;border:1.5px solid var(--border);background:var(--off);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:20px;transition:all .18s}
+.gthumb:hover{border-color:var(--border2)}
+.gthumb.on{border-color:var(--blue);background:var(--blue-lt)}
+
+/* Det body */
+.det-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-2xl);overflow:hidden;margin-bottom:20px;box-shadow:var(--shadow)}
+.det-info{padding:24px}
+.det-name{font-family:'Instrument Serif',serif;font-size:28px;color:var(--ink);letter-spacing:-.03em;margin-bottom:4px}
+.det-cat{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted2);margin-bottom:12px}
+.det-tagline{font-size:14px;color:var(--muted);line-height:1.8}
+
+/* Tabs */
+.tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:22px}
+.tab{font-size:13px;font-weight:600;padding:10px 18px;border:none;background:none;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;transition:all .15s;font-family:'Plus Jakarta Sans',sans-serif;letter-spacing:-.01em}
+.tab:hover{color:var(--ink)}
+.tab.on{color:var(--blue);border-bottom-color:var(--blue)}
+.tc{display:none}.tc.on{display:block}
+
+/* Description */
+.feats{display:flex;flex-direction:column;gap:10px;margin-bottom:22px}
+.feat-row{display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--ink);line-height:1.6}
+.feat-ck{width:18px;height:18px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.specs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:20px}
+.spec{background:var(--off);border-radius:10px;padding:12px 14px}
+.spec-l{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted2);margin-bottom:3px}
+.spec-v{font-size:13px;font-weight:600;color:var(--ink)}
+
+/* Guide */
+.g-step{display:flex;gap:14px;margin-bottom:18px}
+.g-num{width:28px;height:28px;border-radius:50%;background:var(--ink);color:var(--white);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px}
+.g-ttl{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:3px}
+.g-desc{font-size:12px;color:var(--muted);line-height:1.75}
+.g-note{background:var(--amber-lt);border:1px solid #fde68a;border-radius:10px;padding:13px 15px;font-size:12px;color:var(--amber);line-height:1.7;margin-top:14px}
+
+/* Reviews */
+.rev-summary{display:flex;align-items:center;gap:20px;background:var(--off);border-radius:14px;padding:18px 20px;margin-bottom:16px}
+.rev-big-num{font-family:'Instrument Serif',serif;font-size:48px;color:var(--ink);line-height:1}
+.rev-big-stars{color:#f59e0b;font-size:16px;letter-spacing:2px}
+.rev-total{font-size:11px;color:var(--muted2);margin-top:3px}
+.rating-bars{flex:1;display:flex;flex-direction:column;gap:5px}
+.rb-r{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted)}
+.rb-t{flex:1;height:5px;background:var(--border);border-radius:99px;overflow:hidden}
+.rb-f{height:100%;background:#f59e0b;border-radius:99px}
+.rev-card{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:10px}
+.rev-top{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.rev-av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--white);flex-shrink:0}
+.rev-name{font-size:13px;font-weight:700;color:var(--ink)}
+.rev-role{font-size:11px;color:var(--muted2)}
+.rev-stars{color:#f59e0b;font-size:12px;letter-spacing:1.5px;margin-bottom:6px}
+.rev-text{font-size:13px;color:var(--muted);line-height:1.75}
+.rev-prod{display:inline-block;font-size:10px;background:var(--blue-lt);color:var(--blue);padding:2px 8px;border-radius:99px;margin-top:7px;font-weight:600;border:1px solid var(--blue-bd)}
+
+/* Policy */
+.pol-item{padding:16px 0;border-bottom:1px solid var(--off2)}
+.pol-item:last-child{border:none}
+.pol-ttl{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--ink);margin-bottom:6px}
+.pol-pill{font-size:10px;font-weight:700;padding:2px 9px;border-radius:99px}
+.pill-y{background:var(--green-lt);color:var(--green)}
+.pill-n{background:#fef2f2;color:var(--red)}
+.pill-p{background:var(--amber-lt);color:var(--amber)}
+.pol-body{font-size:12px;color:var(--muted);line-height:1.8}
+.pol-note{background:var(--blue-lt);border:1px solid var(--blue-bd);border-radius:10px;padding:13px 15px;font-size:12px;color:var(--blue);line-height:1.7;margin-top:14px}
+
+/* Order panel */
+.order-panel{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);padding:22px;position:sticky;top:78px;box-shadow:var(--shadow)}
+.guarantee-badge{display:flex;align-items:flex-start;gap:11px;background:var(--green-lt);border:1px solid #6ee7b7;border-radius:12px;padding:13px 15px;margin-bottom:18px}
+.gb-icon{width:36px;height:36px;border-radius:50%;background:#d1fae5;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.gb-title{font-size:12px;font-weight:700;color:var(--green);margin-bottom:2px}
+.gb-desc{font-size:11px;color:#059669;line-height:1.6}
+.op-name{font-family:'Instrument Serif',serif;font-size:19px;color:var(--ink);letter-spacing:-.02em;margin-bottom:3px}
+.op-price{font-family:'JetBrains Mono',monospace;font-size:30px;font-weight:700;color:var(--blue);margin-bottom:18px;letter-spacing:-.02em}
+.op-price-note{font-size:11px;color:var(--muted2);display:block;margin-top:2px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:400}
+.op-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted2);margin-bottom:8px}
+.pkg-list{display:flex;flex-direction:column;gap:6px;margin-bottom:18px}
+.pkg-btn{display:flex;align-items:center;justify-content:space-between;padding:11px 13px;border:1px solid var(--border);border-radius:10px;background:var(--white);transition:all .15s;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif}
+.pkg-btn:hover{border-color:var(--border2);background:var(--off)}
+.pkg-btn.on{border-color:var(--blue);background:var(--blue-lt)}
+.pkg-btn-lbl{font-size:12px;font-weight:500;color:var(--ink)}
+.pkg-save{font-size:9px;font-weight:700;background:var(--green-lt);color:var(--green);padding:1px 6px;border-radius:3px;margin-left:6px}
+.pkg-btn-price{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--ink)}
+.pkg-btn.on .pkg-btn-lbl,.pkg-btn.on .pkg-btn-price{color:var(--blue)}
+.op-actions{display:flex;flex-direction:column;gap:7px;margin-bottom:18px}
+.btn-add{width:100%;padding:13px;background:var(--blue);color:var(--white);border-radius:10px;font-size:14px;font-weight:600;letter-spacing:.01em;transition:all .2s;font-family:'Plus Jakarta Sans',sans-serif}
+.btn-add:hover{background:var(--blue-h);transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,82,204,.28)}
+.btn-add.on{background:var(--green)}
+.btn-sec{width:100%;padding:11px;border:1px solid var(--border);border-radius:10px;font-size:13px;font-weight:500;background:var(--white);color:var(--muted);transition:all .18s;font-family:'Plus Jakarta Sans',sans-serif}
+.btn-sec:hover{border-color:var(--border2);color:var(--ink)}
+.trust-list{display:flex;flex-direction:column;gap:6px}
+.trust-row{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--muted)}
+.trust-ck{width:14px;height:14px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+/* ── CHECKOUT ── */
+.co-wrap{max-width:680px;margin:0 auto;padding:40px 32px 80px}
+@media(max-width:720px){.co-wrap{padding:24px 20px 60px}}
+.step-bar{display:flex;align-items:center;margin-bottom:32px}
+.step{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--muted2)}
+.step.on{color:var(--blue)}
+.step.done{color:var(--green)}
+.step-dot{width:24px;height:24px;border-radius:50%;border:2px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+.step-line{flex:1;height:1px;background:var(--border);margin:0 8px}
+.co-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);padding:22px;margin-bottom:14px;box-shadow:var(--shadow-sm)}
+.co-card h3{font-family:'Instrument Serif',serif;font-size:18px;color:var(--ink);letter-spacing:-.02em;margin-bottom:18px}
+.f2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+@media(max-width:500px){.f2{grid-template-columns:1fr}}
+.fg{margin-bottom:12px}
+.flbl{font-size:11px;font-weight:600;color:var(--muted);display:block;margin-bottom:5px;letter-spacing:.02em}
+input,select,textarea{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;color:var(--ink);background:var(--white);outline:none;transition:border-color .18s}
+input:focus,select:focus,textarea:focus{border-color:var(--blue)}
+input::placeholder,textarea::placeholder{color:var(--muted2)}
+.pay-tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.ptab{padding:7px 14px;border-radius:8px;font-size:12px;font-weight:600;border:1px solid var(--border);background:var(--white);color:var(--muted);transition:all .15s;font-family:'Plus Jakarta Sans',sans-serif}
+.ptab.on{background:var(--ink);color:var(--white);border-color:var(--ink)}
+.qr-area{background:var(--off);border:1px solid var(--border);border-radius:12px;padding:18px;text-align:center;margin-bottom:14px}
+.qr-box{width:130px;height:130px;background:var(--white);border:1px solid var(--border);border-radius:10px;margin:0 auto 10px;display:flex;align-items:center;justify-content:center}
+.qr-lbl{font-size:12px;color:var(--muted)}
+.upload-zone{border:1.5px dashed var(--border2);border-radius:12px;padding:24px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:14px;position:relative}
+.upload-zone:hover{border-color:var(--blue);background:var(--blue-lt)}
+.upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.up-ico{font-size:28px;margin-bottom:6px}
+.up-txt{font-size:13px;font-weight:600;color:var(--ink)}
+.up-sub{font-size:11px;color:var(--muted2);margin-top:3px}
+.up-done{background:var(--green-lt);border:1px solid #6ee7b7;border-radius:8px;padding:9px 12px;font-size:12px;color:var(--green);font-weight:600;margin-bottom:12px;display:none}
+.err-msg{background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:9px 12px;font-size:12px;color:var(--red);margin-bottom:12px;display:none}
+.co-sum-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:9px 0;border-bottom:1px solid var(--off2)}
+.co-sum-row:last-child{border:none}
+
+/* Order bump */
+.order-bump{border:1.5px dashed #f59e0b;border-radius:14px;padding:15px;background:#fffbeb;margin-bottom:14px;position:relative}
+.bump-badge{position:absolute;top:-10px;left:14px;background:#f59e0b;color:var(--white);font-size:9px;font-weight:700;padding:2px 10px;border-radius:99px;letter-spacing:.04em}
+.bump-row{display:flex;align-items:center;gap:12px}
+.bump-icon{font-size:26px;flex-shrink:0}
+.bump-info{flex:1;min-width:0}
+.bump-name{font-size:12px;font-weight:700;color:var(--ink);margin-bottom:2px}
+.bump-desc{font-size:11px;color:var(--muted);line-height:1.5}
+.bump-price{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--ink);flex-shrink:0}
+.bump-check-row{display:flex;align-items:center;gap:8px;margin-top:10px;padding-top:10px;border-top:1px dashed #fde68a;cursor:pointer}
+.bump-cb{width:18px;height:18px;border-radius:5px;border:2px solid #f59e0b;background:var(--white);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .18s}
+.bump-cb.on{background:#f59e0b;border-color:#f59e0b}
+.bump-cb-lbl{font-size:12px;font-weight:600;color:#92510a}
+
+/* Confirm */
+.conf-wrap{max-width:460px;margin:60px auto;text-align:center;padding:0 20px}
+.conf-ring{width:64px;height:64px;border-radius:50%;background:var(--green-lt);border:2px solid #6ee7b7;display:flex;align-items:center;justify-content:center;margin:0 auto 18px}
+.conf-h{font-family:'Instrument Serif',serif;font-size:30px;color:var(--ink);letter-spacing:-.04em;margin-bottom:8px}
+.conf-p{font-size:14px;color:var(--muted);line-height:1.8;margin-bottom:16px}
+.conf-ref{background:var(--blue-lt);border:1px solid var(--blue-bd);border-radius:10px;padding:12px 16px;font-size:13px;color:var(--blue);font-family:'JetBrains Mono',monospace;font-weight:600;margin-bottom:20px}
+.conf-actions{display:flex;flex-direction:column;gap:8px}
+
+/* Status page */
+.status-wrap{max-width:520px;margin:40px auto;padding:0 20px}
+
+/* Lightbox */
+.lightbox{display:none;position:fixed;inset:0;background:rgba(13,13,12,.9);z-index:9999;align-items:center;justify-content:center;padding:20px}
+.lightbox.open{display:flex}
+.lb-inner{position:relative;max-width:800px;width:100%;display:flex;align-items:center;justify-content:center}
+.lb-close{position:fixed;top:20px;right:20px;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.12);border:none;color:var(--white);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s}
+.lb-close:hover{background:rgba(255,255,255,.22)}
+.lb-nav-btn{position:absolute;top:50%;transform:translateY(-50%);width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.12);border:none;color:var(--white);font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s}
+.lb-nav-btn:hover{background:rgba(255,255,255,.22)}
+.lb-nav-btn.l{left:-54px}.lb-nav-btn.r{right:-54px}
+
+/* Footer strip */
+.shop-footer{text-align:center;padding:20px 0 16px;font-size:11px;color:var(--muted2);border-top:1px solid var(--border);margin-top:20px}
+.shop-footer a{color:var(--muted2);transition:color .15s}
+.shop-footer a:hover{color:var(--ink)}
+
+@media(max-width:720px){
+  .det-gallery{border-radius:16px}
+  .gallery-stage{height:200px}
+  .specs{grid-template-columns:1fr 1fr}
+  .order-panel{position:static}
+  .cart-panel{position:static}
+}
+@media(max-width:480px){
+  .tabs{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .tab{white-space:nowrap;font-size:12px;padding:9px 14px}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="tb-logo">
+    <div class="tb-logomark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+    </div>
+    <span class="tb-wordmark">DTC</span>
+  </div>
+  <nav class="tb-links">
+    <a class="tb-link" href="#" onclick="toPage('cat');return false">Products</a>
+    <a class="tb-link" href="/">Home</a>
+    <a class="tb-link" href="/customer">My account</a>
+  </nav>
+  <div class="tb-right">
+    <button class="tb-ghost" onclick="toPage('status')">Order status</button>
+    <button class="tb-cart" onclick="toPage('cat')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+      Cart <span class="cart-dot" id="cart-dot">0</span>
+    </button>
+  </div>
+</header>
+
+<!-- FLASH BAR -->
+<div class="flash-bar" id="flash-bar">
+  ⚡ <span id="flash-lbl">Flash Sale</span> — <span id="flash-pct"></span> off all products. Ends in <span class="flash-mono" id="flash-cd">--:--:--</span>
+</div>
+
+<!-- ───────────────── CATALOGUE ───────────────── -->
+<div class="pg on" id="pg-cat">
+  <div class="cat-wrap">
+    <div class="cat-hero">
+      <div class="cat-eyebrow"><span class="cat-eyebrow-dot"></span>Official AI subscriptions</div>
+      <h1 class="cat-h">Premium AI tools,<br><em>activated today</em></h1>
+      <p class="cat-sub">Official, dedicated access to the world's leading AI platforms — same-day activation, WhatsApp support included on every plan.</p>
+    </div>
+    <div class="cat-layout">
+      <div class="prod-grid" id="prod-grid"></div>
+      <div>
+        <div class="cart-panel">
+          <div class="cp-hd">
+            <span class="cp-title">Your cart</span>
+            <span class="cp-count" id="cp-count">0 items</span>
+          </div>
+          <div id="cart-body"></div>
+          <div id="cart-footer" style="display:none">
+            <div class="cart-total-row">
+              <span class="cart-total-lbl">Total</span>
+              <span class="cart-total-val" id="cart-total">$0</span>
+            </div>
+            <button class="btn-co" onclick="toPage('checkout')">Checkout →</button>
+            <div class="cart-guarantee">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+              24-hour activation guarantee or full refund
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ───────────────── DETAIL ───────────────── -->
+<div class="pg" id="pg-det">
+  <div class="det-wrap">
+    <button class="back-btn" onclick="toPage('cat')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+      Back to shop
+    </button>
+    <div class="det-layout">
+      <div>
+        <!-- Gallery -->
+        <div class="det-gallery">
+          <div class="gallery-stage" id="gstage" onclick="openLightbox()">
+            <div id="gslide"></div>
+            <div class="gallery-tag" id="gtag"></div>
+            <button class="gallery-arr l" onclick="event.stopPropagation();galleryNav(-1)">&#8249;</button>
+            <button class="gallery-arr r" onclick="event.stopPropagation();galleryNav(1)">&#8250;</button>
+            <div class="gallery-zoom">⤢</div>
+          </div>
+          <div class="gallery-dots" id="gdots"></div>
+          <div class="gallery-thumbs" id="gthumbs"></div>
+        </div>
+        <!-- Det info -->
+        <div class="det-card">
+          <div class="det-info">
+            <div class="det-name" id="det-name"></div>
+            <div class="det-cat" id="det-cat"></div>
+            <div class="det-tagline" id="det-tagline"></div>
+          </div>
+        </div>
+        <!-- Tabs -->
+        <div class="tabs">
+          <button class="tab on" onclick="swTab('desc',this)">Description</button>
+          <button class="tab" onclick="swTab('guide',this)">Setup guide</button>
+          <button class="tab" onclick="swTab('reviews',this)">Reviews</button>
+          <button class="tab" onclick="swTab('refund',this)">Refund policy</button>
+        </div>
+        <div class="tc on" id="tc-desc"></div>
+        <div class="tc" id="tc-guide"></div>
+        <div class="tc" id="tc-reviews"></div>
+        <div class="tc" id="tc-refund"></div>
+      </div>
+      <!-- Order panel -->
+      <div>
+        <div class="order-panel">
+          <div class="guarantee-badge">
+            <div class="gb-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+            </div>
+            <div>
+              <div class="gb-title">24-hour activation guarantee</div>
+              <div class="gb-desc">Activated within 24 hrs of payment verification — or your money back.</div>
+            </div>
+          </div>
+          <div class="op-name" id="op-name"></div>
+          <div class="op-price" id="op-price">$0<span class="op-price-note">per selected plan</span></div>
+          <div class="op-lbl">Choose a plan</div>
+          <div class="pkg-list" id="op-pkgs"></div>
+          <div class="op-actions">
+            <button class="btn-add" id="btn-add" onclick="addFromDet()">Add to cart</button>
+            <button class="btn-sec" onclick="toPage('cat')">← Continue shopping</button>
+          </div>
+          <div class="trust-list">
+            <div class="trust-row"><div class="trust-ck"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div>Official access — never shared</div>
+            <div class="trust-row"><div class="trust-ck"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div>Activated within 2–4 hours</div>
+            <div class="trust-row"><div class="trust-ck"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div>WhatsApp support every day</div>
+            <div class="trust-row"><div class="trust-ck"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div>24-hour refund guarantee</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ───────────────── CHECKOUT ───────────────── -->
+<div class="pg" id="pg-checkout">
+  <div class="co-wrap">
+    <button class="back-btn" onclick="toPage('cat')" style="margin-bottom:24px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+      Back to shop
+    </button>
+    <div class="step-bar">
+      <div class="step done"><div class="step-dot">✓</div><span>Cart</span><div class="step-line"></div></div>
+      <div class="step on"><div class="step-dot">2</div><span>Details</span><div class="step-line"></div></div>
+      <div class="step"><div class="step-dot">3</div><span>Payment</span><div class="step-line"></div></div>
+      <div class="step"><div class="step-dot">4</div><span>Done</span></div>
+    </div>
+    <div class="co-card">
+      <h3>Your details</h3>
+      <div class="f2">
+        <div class="fg"><label class="flbl">Full name *</label><input id="c-name" placeholder="Your full name"/></div>
+        <div class="fg"><label class="flbl">WeChat ID</label><input id="c-wechat" placeholder="Optional"/></div>
+      </div>
+      <div class="fg"><label class="flbl">Email *</label><input type="email" id="c-email" placeholder="you@example.com" readonly style="background:var(--off);color:var(--muted)"/></div>
+      <div class="fg" style="margin:0"><label class="flbl">Notes <span style="font-weight:400;color:var(--muted2)">(optional)</span></label><input id="c-notes" placeholder="Anything we should know?"/></div>
+    </div>
+    <div class="co-card">
+      <h3>Payment</h3>
+      <div class="pay-tabs">
+        <button class="ptab on" id="pt-wechat" onclick="swPay('wechat')">💚 WeChat Pay</button>
+        <button class="ptab" id="pt-alipay" onclick="swPay('alipay')">🔵 Alipay</button>
+        <button class="ptab" id="pt-bank" onclick="swPay('bank')">🏦 Bank transfer</button>
+      </div>
+      <div class="qr-area">
+        <div class="qr-box" id="qr-box">
+          <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="var(--border2)" stroke-width="1" stroke-linecap="round">
+            <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+            <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="3" height="3"/>
+            <rect x="19" y="14" width="2" height="2"/><rect x="14" y="19" width="2" height="2"/><rect x="18" y="19" width="3" height="2"/>
+          </svg>
+        </div>
+        <p class="qr-lbl" id="qr-lbl">Scan to pay with WeChat</p>
+      </div>
+      <p style="font-size:12px;color:var(--muted);line-height:1.75;margin-bottom:14px">After payment, upload your screenshot below to complete your order.</p>
+      <label class="flbl">Payment screenshot *</label>
+      <div class="up-done" id="up-done">✓ <span id="up-fname">File uploaded</span></div>
+      <div class="upload-zone" id="up-zone">
+        <input type="file" id="up-file" accept="image/*,.pdf" onchange="onFile(this)"/>
+        <div id="up-ph">
+          <div class="up-ico">📷</div>
+          <div class="up-txt">Upload payment screenshot</div>
+          <div class="up-sub">JPG, PNG, PDF — max 8 MB</div>
+        </div>
+      </div>
+      <div class="err-msg" id="pay-err"></div>
+      <div class="order-bump" id="order-bump" style="display:none">
+        <div class="bump-badge">⚡ Add-on offer</div>
+        <div class="bump-row">
+          <div class="bump-icon" id="bump-icon">📝</div>
+          <div class="bump-info">
+            <div class="bump-name" id="bump-name">Add Grammarly Premium</div>
+            <div class="bump-desc" id="bump-desc">Advanced grammar & plagiarism checking for just $12/month.</div>
+          </div>
+          <div class="bump-price" id="bump-price">$12</div>
+        </div>
+        <div class="bump-check-row" onclick="toggleBump()">
+          <div class="bump-cb" id="bump-cb"></div>
+          <div class="bump-cb-lbl">Yes, add this to my order</div>
+        </div>
+      </div>
+      <button class="btn-co" onclick="doSubmit()">Place order →</button>
+    </div>
+    <div class="co-card" style="background:var(--off)">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted2);margin-bottom:12px">Order summary</div>
+      <div id="co-summary"></div>
+      <div class="cart-total-row" style="padding-bottom:0">
+        <span class="cart-total-lbl">Total</span>
+        <span class="cart-total-val" id="co-total">$0</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ───────────────── CONFIRM ───────────────── -->
+<div class="pg" id="pg-confirm">
+  <div class="conf-wrap">
+    <div class="conf-ring">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <div class="conf-h">Order submitted!</div>
+    <p class="conf-p">Your payment screenshot is under review. We'll email your personal activation link within a few hours — usually much sooner.</p>
+    <div class="conf-ref">Order ref: <span id="conf-ref">—</span></div>
+    <div class="conf-actions">
+      <button class="btn-co" onclick="location.href='/customer'">View my subscriptions</button>
+      <button class="btn-sec" onclick="resetAll()">Place another order</button>
+    </div>
+  </div>
+</div>
+
+<!-- ───────────────── STATUS ───────────────── -->
+<div class="pg" id="pg-status">
+  <div class="status-wrap">
+    <button class="back-btn" onclick="toPage('cat')" style="margin-bottom:20px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>Back
+    </button>
+    <div class="co-card">
+      <h3>Check order status</h3>
+      <div class="fg"><label class="flbl">Your email</label><input type="email" id="st-email" placeholder="you@example.com"/></div>
+      <button class="btn-co" onclick="checkStatus()" style="margin-bottom:0">Check status</button>
+      <div id="st-results" style="margin-top:14px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <div class="lb-inner" onclick="event.stopPropagation()">
+    <button class="lb-nav-btn l" onclick="lbNav(-1)">&#8249;</button>
+    <div id="lb-content" style="font-size:160px;line-height:1"></div>
+    <button class="lb-nav-btn r" onclick="lbNav(1)">&#8250;</button>
+  </div>
+  <button class="lb-close" onclick="closeLightbox()">✕</button>
+</div>
+
+<div class="shop-footer">
+  <a href="/">← DTC Home</a> &nbsp;·&nbsp;
+  <a href="/customer">Customer portal</a> &nbsp;·&nbsp;
+  <a href="https://wa.me/8619738122807" target="_blank">WhatsApp support</a>
+</div>
+
+<script>
+const PRODS=[
+  {id:'claude',name:'Claude Pro',cat:'AI Chat',icon:'⚡',bg:'#eff6ff',ac:'#1d4ed8',tag:'Most popular',tb:'#dbeafe',tc:'#1e40af',
+   tagline:'The most capable AI assistant — 200K token context, Claude Opus, priority access and Projects for deep research and professional work.',
+   pkgs:[{l:'1 month',p:15,d:30},{l:'3 months',p:40,d:90,save:'Save $5'},{l:'6 months',p:75,d:180,save:'Save $15'},{l:'1 year',p:140,d:365,save:'Save $40'}],
+   slides:[{type:'emoji',content:'⚡',bg:'#eff6ff',label:'Claude Pro'},{type:'emoji',content:'📄',bg:'#dbeafe',label:'200K context'},{type:'emoji',content:'🗂️',bg:'#eff6ff',label:'Projects'},{type:'emoji',content:'✅',bg:'#dcfce7',label:'Activation'}],
+   feats:['Claude Opus — most capable model','200K token context window (entire books)','Priority access during peak hours','Projects to organise chats by topic','Custom system prompts and memory','API access included with Pro plan'],
+   specs:[['Provider','Anthropic'],['Model','Opus + Sonnet'],['Context','200K tokens'],['Activation','2–4 hrs'],['Support','Daily'],['Plans','30–365 days']],
+   guide:['Place your order and complete payment via WeChat Pay, Alipay or bank transfer.','Upload a clear, uncropped screenshot of your payment receipt.','Our team verifies your payment — usually within 2 hours. Email updates at each stage.','Click your personal activation link and enter your Anthropic account email.','Your Claude Pro subscription activates instantly. Log into claude.ai to confirm.'],
+   revs:[{n:'Aisha M.',r:'PhD Researcher · Nigeria',s:5,t:'Activated within 2 hours. The 200K context is a game-changer for reading entire papers at once. Highly recommended.',c:'#1d4ed8',pr:'Claude Pro · 3 months'},{n:'Dr. Omar K.',r:'Researcher · UAE',s:5,t:'Use it every day for literature reviews. Reasoning quality is genuinely exceptional. DTC service is fast and professional.',c:'#7c3aed',pr:'Claude Pro · 1 year'},{n:'Sophia L.',r:'Masters · UK',s:5,t:'Perfect for academic writing. Context length means I can paste entire thesis drafts. Worth every penny.',c:'#0891b2',pr:'Claude Pro · 1 month'}]},
+  {id:'chatgpt',name:'ChatGPT Plus',cat:'AI Chat',icon:'🤖',bg:'#f0fdf4',ac:'#10a37f',tag:'GPT-4o',tb:'#dcfce7',tc:'#166534',
+   tagline:'Full access to GPT-4o, DALL·E 3 image generation, Advanced Data Analysis and Browse with Bing — for professionals and creatives.',
+   pkgs:[{l:'1 month',p:20,d:30},{l:'3 months',p:55,d:90,save:'Save $5'},{l:'6 months',p:100,d:180,save:'Save $20'},{l:'1 year',p:190,d:365,save:'Save $50'}],
+   slides:[{type:'emoji',content:'🤖',bg:'#f0fdf4',label:'GPT-4o'},{type:'emoji',content:'🎨',bg:'#fdf4ff',label:'DALL·E 3'},{type:'emoji',content:'📊',bg:'#fffbeb',label:'Data Analysis'},{type:'emoji',content:'🌐',bg:'#f0fdf4',label:'Web browsing'}],
+   feats:['GPT-4o — OpenAI\'s smartest model','DALL·E 3 image generation built in','Advanced Data Analysis (code interpreter)','Browse with Bing — live web search','Custom GPTs marketplace access','Voice mode — natural conversation'],
+   specs:[['Provider','OpenAI'],['Model','GPT-4o'],['Images','DALL·E 3'],['Activation','2–4 hrs'],['Support','Daily'],['Plans','30–365 days']],
+   guide:['Complete your order and pay via WeChat Pay, Alipay or bank transfer.','Upload your payment screenshot clearly showing the amount and date.','Verification takes 2–4 hours — email update when ready.','Click your activation link and enter the Gmail address you want upgraded.','Your ChatGPT Plus badge appears at chatgpt.com within minutes of activation.'],
+   revs:[{n:'Wei C.',r:'Developer · China',s:5,t:'6 months — zero issues. Code Interpreter is incredibly powerful. DTC activated mine within 3 hours.',c:'#10a37f',pr:'ChatGPT Plus · 1 year'},{n:'Lucas R.',r:'MSc Research · Brazil',s:5,t:'GPT-4o with web browsing is unbeatable for research. Fair pricing, professional service from DTC.',c:'#d97706',pr:'ChatGPT Plus · 3 months'},{n:'Priya S.',r:'Designer · India',s:5,t:'DALL·E 3 alone is worth it. Generate exactly what I need for client mockups every day.',c:'#9333ea',pr:'ChatGPT Plus · 1 month'}]},
+  {id:'grammarly',name:'Grammarly Premium',cat:'Writing AI',icon:'📝',bg:'#f5f3ff',ac:'#7c3aed',tag:'Writing',tb:'#ede9fe',tc:'#5b21b6',
+   tagline:'Advanced grammar, style, tone detection, plagiarism checking and full AI writing assistance for academics and professionals.',
+   pkgs:[{l:'1 month',p:12,d:30},{l:'3 months',p:30,d:90,save:'Save $6'},{l:'1 year',p:100,d:365,save:'Save $44'}],
+   slides:[{type:'emoji',content:'📝',bg:'#f5f3ff',label:'Writing assistant'},{type:'emoji',content:'🔍',bg:'#ede9fe',label:'Plagiarism checker'},{type:'emoji',content:'🎨',bg:'#f5f3ff',label:'Tone detection'},{type:'emoji',content:'✅',bg:'#f0fdf4',label:'Activated'}],
+   feats:['Advanced grammar and spelling correction','Style and clarity suggestions','Tone detection and adjustment','Full-document plagiarism checker','AI-powered sentence rewriting','Works in browser, Word and Google Docs'],
+   specs:[['Provider','Grammarly'],['Platform','Browser+Desktop'],['Plagiarism','Included'],['Activation','2–4 hrs'],['Support','Daily'],['Plans','30–365 days']],
+   guide:['Complete your order and upload your payment screenshot.','Receive your activation email within 2–4 hours of payment verification.','Click the activation link — log in or create a Grammarly account.','Premium features appear instantly in your Grammarly dashboard.','Install the browser extension and desktop app for the best experience.'],
+   revs:[{n:'Lucas R.',r:'MSc Research · Brazil',s:5,t:'Needed it urgently for thesis submission. DTC delivered same-day. Plagiarism checker caught issues I had missed.',c:'#7c3aed',pr:'Grammarly · 3 months'},{n:'Sarah T.',r:'Content Writer · USA',s:5,t:'The tone suggestions alone transformed my client work. Writing for different audiences is so much easier.',c:'#0891b2',pr:'Grammarly · 1 year'},{n:'Ahmed H.',r:'PhD Student · Egypt',s:5,t:'Essential for non-native English academic writing. Completely transformed my paper quality.',c:'#d97706',pr:'Grammarly · 3 months'}]},
+  {id:'copilot',name:'GitHub Copilot',cat:'Coding AI',icon:'💻',bg:'#f8fafc',ac:'#24292f',tag:'For devs',tb:'#f1f5f9',tc:'#334155',
+   tagline:'AI-powered code completion, Copilot Chat and code review for VS Code, JetBrains, Vim, Neovim and 10+ more editors.',
+   pkgs:[{l:'1 month',p:10,d:30},{l:'1 year',p:100,d:365,save:'Save $20'}],
+   slides:[{type:'emoji',content:'💻',bg:'#f8fafc',label:'VS Code'},{type:'emoji',content:'💬',bg:'#f1f5f9',label:'Copilot Chat'},{type:'emoji',content:'🧪',bg:'#f8fafc',label:'Test gen'},{type:'emoji',content:'✅',bg:'#f0fdf4',label:'Activated'}],
+   feats:['Real-time code completion as you type','Copilot Chat — ask questions about your code','Supports 30+ programming languages','Works in VS Code, JetBrains, Vim, Neovim','Code review suggestions and explanations','Generate tests, docs and commit messages'],
+   specs:[['Provider','GitHub/Microsoft'],['IDEs','VS Code, JetBrains+'],['Languages','30+'],['Activation','2–4 hrs'],['Support','Daily'],['Plans','30–365 days']],
+   guide:['Complete your order and pay via WeChat Pay, Alipay or bank transfer.','After payment verification you receive an activation link by email.','Click the link and enter the GitHub username you want Copilot enabled on.','Copilot activates on your GitHub account within minutes.','Install the Copilot extension in VS Code or your preferred IDE and sign in.'],
+   revs:[{n:'Wei C.',r:'Developer · China',s:5,t:'Used for 6 months. Suggestions in VS Code are eerily accurate. Saves 2–3 hours every single day.',c:'#24292f',pr:'GitHub Copilot · 1 year'},{n:'Pedro M.',r:'Backend Dev · Brazil',s:5,t:'JetBrains integration is perfect. Test generation alone is worth the price. Support was instant.',c:'#1d4ed8',pr:'GitHub Copilot · 1 month'},{n:'Yuki T.',r:'Full Stack · Japan',s:5,t:'Copilot Chat is revolutionary for understanding legacy code. Price through DTC is much more reasonable.',c:'#7c3aed',pr:'GitHub Copilot · 1 year'}]},
+];
+
+let _cart={},_det=null,_selPkg={},_payMethod='wechat',_file=null,_email='';
+let _gIdx=0,_gSlides=[],_bumpChecked=false,_bumpProd=null;
+
+function toPage(id){document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));document.getElementById('pg-'+id).classList.add('on');window.scrollTo({top:0,behavior:'smooth'});}
+
+// ── GALLERY ───────────────────────────────────────────────────────────────────
+function renderGallery(p){
+  _gSlides=p.slides||[{type:'emoji',content:p.icon,bg:p.bg,label:p.name}];_gIdx=0;_showSlide(0);
+  const tag=document.getElementById('gtag');tag.textContent=p.tag;tag.style.background=p.tb;tag.style.color=p.tc;
+  document.getElementById('gdots').innerHTML=_gSlides.map((_,i)=>`<button class="gdot${i===0?' on':''}" onclick="gotoSlide(${i})"></button>`).join('');
+  document.getElementById('gthumbs').innerHTML=_gSlides.map((s,i)=>`<div class="gthumb${i===0?' on':''}" onclick="gotoSlide(${i})" title="${s.label}">${s.type==='img'?`<img src="${s.content}" style="width:100%;height:100%;object-fit:cover"/>`:`<span style="font-size:20px">${s.content}</span>`}</div>`).join('');
+}
+function _showSlide(i){
+  const s=_gSlides[i];if(!s)return;
+  document.getElementById('gstage').style.background=s.bg||'#f9f9f8';
+  document.getElementById('gslide').innerHTML=s.type==='img'?`<img src="${s.content}" style="max-height:200px;max-width:90%;border-radius:10px"/>` : `<span style="font-size:88px;line-height:1">${s.content}</span>`;
+  document.querySelectorAll('.gdot').forEach((d,x)=>d.classList.toggle('on',x===i));
+  document.querySelectorAll('.gthumb').forEach((t,x)=>t.classList.toggle('on',x===i));
+}
+function galleryNav(dir){_gIdx=(_gIdx+dir+_gSlides.length)%_gSlides.length;_showSlide(_gIdx);}
+function gotoSlide(i){_gIdx=i;_showSlide(i);}
+document.addEventListener('keydown',e=>{const pg=document.getElementById('pg-det');if(!pg||!pg.classList.contains('on'))return;if(e.key==='ArrowLeft')galleryNav(-1);if(e.key==='ArrowRight')galleryNav(1);if(e.key==='Escape')closeLightbox();});
+
+// ── LIGHTBOX ──────────────────────────────────────────────────────────────────
+function openLightbox(){const s=_gSlides[_gIdx];document.getElementById('lb-content').innerHTML=s.type==='img'?`<img src="${s.content}" style="max-height:80vh;max-width:90vw;border-radius:12px"/>`:`<span>${s.content}</span>`;document.getElementById('lightbox').classList.add('open');document.body.style.overflow='hidden';}
+function closeLightbox(){document.getElementById('lightbox').classList.remove('open');document.body.style.overflow='';}
+function lbNav(dir){_gIdx=(_gIdx+dir+_gSlides.length)%_gSlides.length;_showSlide(_gIdx);openLightbox();}
+
+// ── GRID ──────────────────────────────────────────────────────────────────────
+function renderGrid(){
+  document.getElementById('prod-grid').innerHTML=PRODS.map(p=>{
+    const inC=!!_cart[p.id];
+    return`<div class="pc${inC?' sel':''}" id="pc-${p.id}">
+      <div class="pc-img" style="background:${p.bg}">
+        <div class="pc-tag" style="background:${p.tb};color:${p.tc}">${p.tag}</div>
+        <div class="pc-check"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <span style="font-size:52px;line-height:1">${p.icon}</span>
+      </div>
+      <div class="pc-body">
+        <div class="pc-name">${p.name}</div>
+        <div class="pc-cat">${p.cat}</div>
+        <div class="pc-desc">${p.tagline.substring(0,90)}…</div>
+        <button class="pc-view" onclick="openDet('${p.id}')">View full details <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+        <div class="pc-foot">
+          <div class="pc-price">from <strong>$${Math.min(...p.pkgs.map(k=>k.p))}</strong></div>
+          <button class="pc-add${inC?' on':''}" onclick="togCart('${p.id}',event)">
+            ${inC?'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> Added':'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add to cart'}
+          </button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  renderCartPanel();
+}
+
+function togCart(id,e){e.stopPropagation();const p=PRODS.find(x=>x.id===id);if(_cart[id])delete _cart[id];else _cart[id]={prod:p,pkg:p.pkgs[0]};renderGrid();if(_det&&_det.id===id)renderOP();}
+
+function renderCartPanel(){
+  const items=Object.values(_cart),n=items.length;
+  document.getElementById('cart-dot').textContent=n;
+  document.getElementById('cp-count').textContent=n+' item'+(n!==1?'s':'');
+  const body=document.getElementById('cart-body'),foot=document.getElementById('cart-footer');
+  if(!items.length){body.innerHTML='<div class="cp-empty">Your cart is empty.<br>Add a product to get started.</div>';foot.style.display='none';return;}
+  body.innerHTML=items.map(({prod:p,pkg})=>`<div class="ci">
+    <div class="ci-row"><span class="ci-icon">${p.icon}</span><span class="ci-name">${p.name}</span><button class="ci-rm" onclick="delCart('${p.id}')">×</button></div>
+    <select class="ci-pkg" onchange="chPkg('${p.id}',parseInt(this.value))">${p.pkgs.map(pk=>`<option value="${pk.d}"${pk.d===pkg.d?' selected':''}>${pk.l} — $${pk.p}</option>`).join('')}</select>
+    <div class="ci-price">$${pkg.p}</div>
+  </div>`).join('');
+  document.getElementById('cart-total').textContent='$'+items.reduce((s,{pkg})=>s+pkg.p,0);
+  foot.style.display='';
+}
+function delCart(id){delete _cart[id];renderGrid();if(_det&&_det.id===id)renderOP();}
+function chPkg(id,d){const p=PRODS.find(x=>x.id===id);_cart[id].pkg=p.pkgs.find(pk=>pk.d===d);renderCartPanel();}
+
+// ── DETAIL ────────────────────────────────────────────────────────────────────
+function openDet(id){
+  const p=PRODS.find(x=>x.id===id);_det=p;_selPkg[p.id]=_cart[p.id]?.pkg||p.pkgs[0];
+  renderGallery(p);
+  document.getElementById('det-name').textContent=p.name;
+  document.getElementById('det-cat').textContent=p.cat;
+  document.getElementById('det-tagline').textContent=p.tagline;
+  document.getElementById('tc-desc').innerHTML=`<div class="feats">${p.feats.map(f=>`<div class="feat-row"><div class="feat-ck"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div>${f}</div>`).join('')}</div><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted2);margin-bottom:10px">Specifications</div><div class="specs">${p.specs.map(([l,v])=>`<div class="spec"><div class="spec-l">${l}</div><div class="spec-v">${v}</div></div>`).join('')}</div>`;
+  document.getElementById('tc-guide').innerHTML=`${p.guide.map((g,i)=>`<div class="g-step"><div class="g-num">${i+1}</div><div><div class="g-ttl">Step ${i+1}</div><div class="g-desc">${g}</div></div></div>`).join('')}<div class="g-note">⏱ Most activations complete within 2–4 hours. You will receive an email update at every stage.</div>`;
+  const bars=[[5,80],[4,14],[3,4],[2,1],[1,1]];
+  document.getElementById('tc-reviews').innerHTML=`<div class="rev-summary"><div><div class="rev-big-num">4.9</div><div class="rev-big-stars">★★★★★</div><div class="rev-total">${p.revs.length*40+120} reviews</div></div><div class="rating-bars">${bars.map(([s,pct])=>`<div class="rb-r"><span style="min-width:22px">${s}★</span><div class="rb-t"><div class="rb-f" style="width:${pct}%"></div></div><span style="min-width:28px;color:var(--muted2)">${pct}%</span></div>`).join('')}</div></div>${p.revs.map(r=>`<div class="rev-card"><div class="rev-top"><div class="rev-av" style="background:${r.c}">${r.n.split(' ').map(w=>w[0]).join('')}</div><div><div class="rev-name">${r.n}</div><div class="rev-role">${r.r}</div></div></div><div class="rev-stars">${'★'.repeat(r.s)}</div><div class="rev-text">${r.t}</div><span class="rev-prod">${r.pr}</span></div>`).join('')}`;
+  document.getElementById('tc-refund').innerHTML=`<div class="pol-item"><div class="pol-ttl"><span class="pol-pill pill-y">Eligible</span>24-hour activation guarantee</div><div class="pol-body">If your account is not activated within 24 hours of payment verification, you are entitled to a full refund — no questions asked.</div></div><div class="pol-item"><div class="pol-ttl"><span class="pol-pill pill-y">Eligible</span>Account not working on delivery</div><div class="pol-body">If the account details we provide do not grant you the correct subscription level, we will re-activate at no cost or provide a full refund within 48 hours.</div></div><div class="pol-item"><div class="pol-ttl"><span class="pol-pill pill-p">Partial</span>Early cancellation within 7 days</div><div class="pol-body">If you cancel within the first 7 days and have not yet used the subscription, we offer a pro-rated refund for the unused period. Contact us via WhatsApp.</div></div><div class="pol-item"><div class="pol-ttl"><span class="pol-pill pill-n">Not eligible</span>Change of mind after activation</div><div class="pol-body">Once an account is activated and confirmed working, we are unable to offer refunds for change of mind. Please review product details carefully before purchasing.</div></div><div class="pol-item"><div class="pol-ttl"><span class="pol-pill pill-n">Not eligible</span>Account sharing or policy violations</div><div class="pol-body">Subscriptions are for individual use only. Accounts found to be shared or used in violation of the platform's terms are not eligible for refunds.</div></div><div class="pol-note">To request a refund, contact us on WhatsApp with your order reference. We process all refund requests within 24 hours.</div>`;
+  renderOP();
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('on',i===0));
+  document.querySelectorAll('.tc').forEach((t,i)=>t.classList.toggle('on',i===0));
+  toPage('det');
+}
+
+function renderOP(){
+  const p=_det;if(!p)return;
+  const pkg=_selPkg[p.id]||p.pkgs[0];
+  document.getElementById('op-name').textContent=p.name;
+  document.getElementById('op-price').innerHTML=`$${pkg.p}<span class="op-price-note">per selected plan</span>`;
+  document.getElementById('op-pkgs').innerHTML=p.pkgs.map(pk=>`<button class="pkg-btn${pk.d===pkg.d?' on':''}" onclick="selPkg(${pk.d})"><span class="pkg-btn-lbl">${pk.l}${pk.save?`<span class="pkg-save">${pk.save}</span>`:''}</span><span class="pkg-btn-price">$${pk.p}</span></button>`).join('');
+  const inC=!!_cart[p.id];const btn=document.getElementById('btn-add');
+  btn.textContent=inC?'✓ Added to cart':'Add to cart';btn.className='btn-add'+(inC?' on':'');
+}
+function selPkg(d){const p=_det;if(!p)return;_selPkg[p.id]=p.pkgs.find(pk=>pk.d===d);renderOP();}
+function addFromDet(){const p=_det;if(!p)return;_cart[p.id]={prod:p,pkg:_selPkg[p.id]||p.pkgs[0]};renderGrid();renderOP();}
+function swTab(name,btn){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));document.querySelectorAll('.tc').forEach(t=>t.classList.remove('on'));btn.classList.add('on');document.getElementById('tc-'+name).classList.add('on');}
+
+// ── CHECKOUT ──────────────────────────────────────────────────────────────────
+function buildCheckoutSummary(){
+  const items=Object.values(_cart);let total=items.reduce((s,{pkg})=>s+pkg.p,0);
+  let rows=items.map(({prod:p,pkg})=>`<div class="co-sum-row"><span>${p.icon} ${p.name} <span style="color:var(--muted2);font-size:11px">· ${pkg.l}</span></span><span style="font-weight:700;font-family:'JetBrains Mono',monospace">$${pkg.p}</span></div>`).join('');
+  if(_bumpChecked&&_bumpProd){const bp=_bumpProd.pkgs[0];total+=bp.p;rows+=`<div class="co-sum-row" style="color:var(--amber)"><span>⚡ ${_bumpProd.icon} ${_bumpProd.name} <span style="font-size:11px">(add-on)</span></span><span style="font-weight:700;font-family:'JetBrains Mono',monospace">$${bp.p}</span></div>`;}
+  document.getElementById('co-summary').innerHTML=rows;
+  document.getElementById('co-total').textContent='$'+total;
+  buildOrderBump();
+}
+
+function buildOrderBump(){
+  const bump=PRODS.find(p=>!_cart[p.id]);const el=document.getElementById('order-bump');
+  if(!bump||!el){if(el)el.style.display='none';return;}
+  _bumpProd=bump;_bumpChecked=false;
+  document.getElementById('bump-icon').textContent=bump.icon;
+  document.getElementById('bump-name').textContent='Add '+bump.name;
+  document.getElementById('bump-desc').textContent=bump.tagline.substring(0,90)+'…';
+  document.getElementById('bump-price').textContent='$'+bump.pkgs[0].p;
+  document.getElementById('bump-cb').className='bump-cb';
+  document.getElementById('bump-cb').innerHTML='';
+  el.style.display='';
+}
+
+function toggleBump(){
+  _bumpChecked=!_bumpChecked;const cb=document.getElementById('bump-cb');
+  cb.className='bump-cb'+(_bumpChecked?' on':'');
+  cb.innerHTML=_bumpChecked?'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>':'';
+  buildCheckoutSummary();
+}
+
+function swPay(m){_payMethod=m;['wechat','alipay','bank'].forEach(x=>document.getElementById('pt-'+x).classList.toggle('on',x===m));const lbls={wechat:'Scan to pay with WeChat Pay',alipay:'Scan to pay with Alipay',bank:'Bank transfer — details below'};document.getElementById('qr-lbl').textContent=lbls[m]||'';}
+
+function onFile(inp){const file=inp.files&&inp.files[0];if(!file)return;if(file.size>8*1024*1024){alert('File must be under 8 MB.');return;}_file=file;document.getElementById('up-ph').style.display='none';document.getElementById('up-done').style.display='block';document.getElementById('up-fname').textContent=file.name;}
+
+async function doSubmit(){
+  const name=document.getElementById('c-name').value.trim(),email=document.getElementById('c-email').value.trim();
+  const errEl=document.getElementById('pay-err');errEl.style.display='none';
+  if(!name){errEl.textContent='Please enter your name.';errEl.style.display='block';return;}
+  if(!email){errEl.textContent='Please enter your email.';errEl.style.display='block';return;}
+  if(!_file){errEl.textContent='Please upload your payment screenshot.';errEl.style.display='block';return;}
+  const btn=document.querySelector('#pg-checkout .btn-co:last-of-type');if(btn){btn.disabled=true;btn.textContent='Submitting…';}
+  const items=Object.values(_cart);if(_bumpChecked&&_bumpProd)items.push({prod:_bumpProd,pkg:_bumpProd.pkgs[0]});
+  let success=false,orderRef='';
+  try{
+    for(const {prod:p,pkg} of items){
+      const fd=new FormData();fd.append('customerName',name);fd.append('email',email);fd.append('wechat',document.getElementById('c-wechat').value.trim());fd.append('productId',p.id);fd.append('packageLabel',pkg.l);fd.append('paymentMethod',_payMethod);fd.append('notes',document.getElementById('c-notes').value.trim());fd.append('receipt',_file,_file.name);fd.append('price',String(pkg.p));
+      const r=await fetch('/api/shop/order',{method:'POST',body:fd});const d=await r.json();
+      if(d.ok){success=true;orderRef=d.orderRef;}else{errEl.textContent=d.error||'Submission failed.';errEl.style.display='block';}
+    }
+  }catch{errEl.textContent='Cannot reach the server. Please try again.';errEl.style.display='block';}
+  if(success){document.getElementById('conf-ref').textContent=orderRef;toPage('confirm');fetch('/api/shop/cart-complete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})}).catch(()=>{});}
+  if(btn){btn.disabled=false;btn.textContent='Place order →';}
+}
+
+async function checkStatus(){
+  const email=document.getElementById('st-email').value.trim(),wrap=document.getElementById('st-results');
+  if(!email){wrap.innerHTML='<p style="font-size:12px;color:var(--red)">Please enter your email.</p>';return;}
+  wrap.innerHTML='<p style="font-size:12px;color:var(--muted)">Loading…</p>';
+  try{
+    const d=await fetch('/api/shop/order-status?email='+encodeURIComponent(email)).then(r=>r.json());
+    const orders=d.orders||[];
+    if(!orders.length){wrap.innerHTML='<p style="font-size:12px;color:var(--muted2);text-align:center;padding:12px 0">No orders found.</p>';return;}
+    const sc={approved:['var(--green)','Approved — check email for activation link'],declined:['var(--red)','Declined'],pending:['var(--amber)','Awaiting review']};
+    wrap.innerHTML=orders.map(o=>{const[col,lbl]=sc[o.status]||sc.pending;return`<div style="background:var(--off);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-size:13px;font-weight:600">${o.productName||'Order'}</span><span style="font-size:11px;font-weight:700;color:${col}">${o.status}</span></div><div style="font-size:12px;color:var(--muted);margin-bottom:3px">${lbl}</div><div style="font-size:10px;color:var(--muted2);font-family:'JetBrains Mono',monospace">${o.orderRef} · $${o.price}</div></div>`;}).join('');
+  }catch{wrap.innerHTML='<p style="font-size:12px;color:var(--red)">Failed to load. Please try again.</p>';}
+}
+
+async function loadCatalogue(){
+  try{const d=await fetch('/api/shop/catalogue').then(r=>r.json());if(d?.products?.length){d.products.forEach(ap=>{const lp=PRODS.find(x=>x.id===ap.id);if(lp){if(ap.packages?.length)lp.pkgs=ap.packages.map(pk=>({l:pk.label,p:pk.price,d:pk.days||(pk.label.includes('year')?365:pk.label.includes('6')?180:pk.label.includes('3')?90:30)}));if(ap.name)lp.name=ap.name;}});}}catch{}
+  try{const fs=await fetch('/api/flash-sale').then(r=>r.json());if(fs?.active){const bar=document.getElementById('flash-bar');bar.style.display='block';document.getElementById('flash-lbl').textContent=fs.label||'Flash Sale';document.getElementById('flash-pct').textContent=fs.discountPct+'%';let ms=new Date(fs.endsAt)-new Date();const t=setInterval(()=>{if(ms<=0){bar.style.display='none';clearInterval(t);return;}const h=Math.floor(ms/3600000),m=Math.floor((ms%3600000)/60000),s=Math.floor((ms%60000)/1000);document.getElementById('flash-cd').textContent=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;ms-=1000;},1000);}}catch{}
+  const em=new URLSearchParams(location.search).get('email');if(em){_email=em;document.getElementById('c-email').value=em;}
+  renderGrid();
+}
+
+function resetAll(){_cart={};_file=null;_det=null;_email='';_bumpChecked=false;_bumpProd=null;_gIdx=0;_gSlides=[];document.getElementById('up-ph').style.display='';document.getElementById('up-done').style.display='none';document.getElementById('c-name').value='';document.getElementById('c-wechat').value='';document.getElementById('c-notes').value='';document.getElementById('pay-err').style.display='none';renderGrid();toPage('cat');}
+
+const _origToPage=toPage;window.toPage=function(id){if(id==='checkout')buildCheckoutSummary();_origToPage(id);};
+loadCatalogue();
+</script>
+</body>
+</html>
